@@ -70,3 +70,63 @@
         })();
     </script>
 
+    <!-- Header / Navigation -->
+    <header>
+        <div class="logo">
+            <a href="#hero">&lt;CARLOS ALCANTARA/&gt;</a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#skills">Stack</a></li>
+                <li><a href="#experience">Experience &amp; Education</a></li>
+                <li><a href="#certifications">Certifications</a></li>
+                <li><a href="#about">Beyond Development</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <div class="theme-toggle">
+            <span class="theme-label">MODE</span>
+
+            <button class="theme-switch" type="button" aria-label="Toggle light and dark mode" aria-pressed="false">
+                <span class="toggle-dot"></span>
+            </button>
+        </div>
+
+        <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+            <svg class="menu-icon menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+            </svg>
+            <svg class="menu-icon menu-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+            </svg>
+        </button>
+
+    </header>
+
+    <!-- Mobile Menu (nav + mode toggle, shown on tablet & mobile) -->
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+        <nav class="mobile-nav">
+            <ul>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#experience">Experience &amp; Education</a></li>
+                <li><a href="#certifications">Certifications</a></li>
+                <li><a href="#about">Beyond Development</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <div class="theme-toggle mobile-theme">
+            <span class="theme-label">MODE</span>
+
+            <button class="theme-switch" type="button" aria-label="Toggle light and dark mode" aria-pressed="false">
+                <span class="toggle-dot"></span>
+            </button>
+        </div>
+    </div>
+
