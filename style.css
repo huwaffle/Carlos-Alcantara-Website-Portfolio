@@ -1,0 +1,139 @@
+/* =========================================================
+   NOTHING PHONE — MINIMALIST PORTFOLIO
+   ========================================================= */
+
+/* Doto = dot-matrix display face (used for the hero name only).
+   ROND axis requested so the dots can be rounded via font-variation-settings. */
+@import url('https://fonts.googleapis.com/css2?family=Doto:ROND,wght@0..100,400..900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+/* =========================================================
+   DESIGN TOKENS
+   ========================================================= */
+
+:root {
+    --bg: #0a0a0a;
+    --bg-dark: #0a0a0a;
+    --bg-light: #f4f4f4;
+    --bg-soft: #111111;
+    --card: #0d0d0d;
+    /* DOT GRID: --text colors the resting dots in dark mode,
+       --accent colors the dots that glow around the cursor.
+       (Can be overridden in index.js — see the DOT_COLORS block.) */
+    --text: #f5f5f5;
+    --text-soft: #d8d8d8;
+    --text-muted: #888;
+    --text-subtle: #555;
+    --border: #292929;
+    --button-text: #0a0a0a;
+    --accent: #ff0000;
+    --accent-soft: rgba(255, 0, 0, 0.14);
+    --max-width: 1150px;
+    --font-main: "Inter", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Space Mono", "Courier New", monospace;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --transition: 0.25s var(--ease);
+}
+
+body.light-mode {
+    --bg: #f4f4f4;
+    --bg-soft: #ffffff;
+    --card: #ffffff;
+    /* DOT GRID in light mode: resting dots use --text-subtle (soft gray,
+       see below) — NOT --text — so the pattern never fights the body text */
+    --text: #0a0a0a;
+    --text-soft: #333;
+    --text-muted: #555;
+    --text-subtle: #767676;
+    --border: #d2d2d2;
+    --button-text: #f5f5f5;
+}
+
+/* =========================================================
+   THEME SWITCH
+   ========================================================= */
+
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.theme-switch {
+    position: relative;
+    width: 46px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.theme-switch .toggle-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 4px;
+    background: var(--text);
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.theme-switch::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    right: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+body.light-mode .theme-switch .toggle-dot {
+    transform: translateX(20px);
+    background: var(--button-text);
+}
+
+body.light-mode .theme-switch::after {
+    left: 5px;
+    right: auto;
+}
+
+/* Hover: only the border reacts. This must beat the global
+   `button:hover { background: var(--accent) }` fill (specificity 0,1,1),
+   otherwise the whole switch floods red. */
+.theme-switch:hover,
+.theme-switch:focus-visible {
+    background: transparent;
+    border-color: var(--accent);
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-main);
+    line-height: 1.7;
+    position: relative;
+    transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
+}
+
