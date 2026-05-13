@@ -137,3 +137,140 @@ body {
     transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 }
 
+/* =========================================================
+   ANIMATED DOT GRID
+   ========================================================= */
+
+
+/* Animated interactive dot grid (dots scatter away from the cursor) */
+#dot-grid {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, rgba(0, 0, 0, 0.35) 100%);
+    mask-image: radial-gradient(ellipse at center, #000 35%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+
+/* Dot-wave transition overlay (covers the screen while a nav click
+   jumps to its section; hidden whenever no wave is playing) */
+#wave-transition {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3000;
+    display: none;
+}
+
+/* Theme slide overlay (wipes the incoming light/dark background across
+   the screen; JS drives the transform, parked off-screen when idle) */
+#theme-slide {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3000;
+    transform: translateX(100%);
+}
+
+#theme-slide.slide-to-light {
+    background: var(--bg-light);
+}
+
+#theme-slide.slide-to-dark {
+    background: var(--bg-dark);
+}
+
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+section {
+    max-width: var(--max-width);
+    margin: auto;
+    padding: 120px 30px;
+}
+
+/* Only the section picked in the nav is shown */
+main > section {
+    display: none;
+}
+
+main > section.is-active {
+    display: block;
+    animation: hero-fade-in 0.45s var(--ease) backwards;
+}
+
+main > section:not(#hero) {
+    min-height: 100vh;
+}
+
+main > section#hero:not(.is-active) {
+    display: none;
+}
+
+main > section#hero.is-active {
+    display: flex;
+}
+
+nav a.is-current {
+    color: var(--text);
+}
+
+nav a.is-current::before,
+nav a.is-current::after {
+    opacity: 1;
+}
+
+/* Hero is the one section already on screen at load, so the scroll
+   observer never fades it in — this plays the exact same fade on page
+   load instead (backwards fill keeps the first paint at opacity 0) */
+#hero {
+    animation: hero-fade-in 0.45s var(--ease) backwards;
+}
+
+/* Kept opacity-only on purpose: the active section fills the viewport, so
+   translating it would push its box 10px past the bottom edge for the length
+   of the animation. That extends the document by 10px, which shows the
+   vertical scrollbar, re-centres the `100vw` padding sideways and makes the
+   hero momentarily scrollable. The staggered lift lives on .content-reveal
+   instead, where it cannot overflow the section. */
+@keyframes hero-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Content blocks inside a section also ease in on their own, one after
+   another in DOM order, so a section assembles instead of snapping into
+   place. setupContentReveal() numbers each block via --reveal-index; the
+   `backwards` fill keeps a block hidden until its turn */
+.content-reveal {
+    animation: content-fade-in 0.5s var(--ease) backwards;
+    animation-delay: calc(40ms + var(--reveal-index, 0) * 60ms);
+}
+
+@keyframes content-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
