@@ -274,3 +274,239 @@ nav a.is-current::after {
     }
 }
 
+/* =========================================================
+   HEADER
+   ========================================================= */
+body > header,
+.project-card,
+.skill-category,
+input,
+textarea,
+.btn {
+    transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+body > header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+}
+
+.logo a {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 1px;
+    transition: color var(--transition);
+}
+
+.logo a:hover,
+.logo a:focus-visible {
+    color: var(--accent);
+}
+
+.logo a::first-letter {
+    color: var(--accent);
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+nav a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+nav a:hover {
+    color: var(--text);
+}
+
+nav a::before {
+    content: "[";
+    color: var(--accent);
+    opacity: 0;
+    margin-right: 3px;
+    transition: opacity var(--transition);
+}
+
+nav a::after {
+    content: "]";
+    color: var(--accent);
+    opacity: 0;
+    margin-left: 3px;
+    transition: opacity var(--transition);
+}
+
+nav a:hover::before,
+nav a:hover::after {
+    opacity: 1;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+#hero {
+    min-height: 100vh;
+    max-width: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+
+    /* Height-aware breathing room: the full 150px on tall screens, easing
+       down on short laptops so the hero always fits one screen */
+    padding: clamp(70px, 11vh, 150px) max(30px, calc((100vw - var(--max-width)) / 2));
+    
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 850px;
+    flex: 1 1 55%;
+}
+
+.hero-image-wrap {
+    flex: 0 0 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-photo-frame {
+    width: clamp(220px, 22vw, 340px);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.05);
+}
+
+.hero-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.greeting {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    /* Dotted matrix look: every glyph is drawn on a 6x10 dot grid,
+       ROND 100 rounds the dots off (0 = square pixels). Fallback is the
+       site's monospace stack, so an offline load still reads correctly. */
+    font-family: "Doto", var(--font-mono);
+    font-variation-settings: "ROND" 100;
+    font-size: clamp(2.5rem, min(10vw, 16vh), 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+.hero-description {
+    max-width: 500px;
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+
+.hero-description {
+    max-width: 500px;
+    color: #888;
+    font-size: 15px;
+}
+
+.hero-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 22px 0 0;
+}
+
+.hero-social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 3px;
+    border: none;
+    border-bottom: 1px solid var(--accent);
+    background: transparent;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.hero-social svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.hero-social:hover,
+.hero-social:focus-visible {
+    background: transparent;
+    color: var(--accent);
+}
+
+.hero-cta {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+}
+
+.btn {
+    border: 1px solid var(--border);
+    padding: 13px 22px;
+    /* Solid page color — the dot grid must not show through */
+    background: var(--bg);
+
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+
+    transition: var(--transition);
+}
+
+.btn:first-child {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+.btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
