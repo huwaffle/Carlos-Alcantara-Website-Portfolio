@@ -294,3 +294,28 @@
             </div>
         </section>
 
+        <div class="project-modal" id="project-modal" aria-hidden="true">
+            <div class="project-modal-backdrop" data-close-modal></div>
+            <div class="project-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
+                <button class="project-modal-close" type="button" aria-label="Close project detail">×</button>
+                <div class="project-modal-gallery" id="project-modal-gallery"></div>
+                <div class="project-modal-body">
+                    <p class="project-modal-kicker">Project Overview</p>
+                    <h3 id="project-modal-title">Project Title</h3>
+                    <p id="project-modal-description"></p>
+                    <ul class="project-modal-tags" id="project-modal-tags"></ul>
+                    <div class="project-modal-actions">
+                        <a id="project-modal-github" class="project-modal-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-image-lightbox" id="project-image-lightbox" aria-hidden="true">
+            <div class="project-image-lightbox-backdrop" data-close-image-lightbox></div>
+            <div class="project-image-lightbox-content" role="dialog" aria-modal="true" aria-label="Project image viewer">
+                <img src="" alt="Project preview" />
+            </div>
+            <button class="project-image-lightbox-close" type="button" aria-label="Close image viewer">×</button>
+        </div>
+
