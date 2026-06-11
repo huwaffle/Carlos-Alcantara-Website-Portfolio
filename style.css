@@ -510,3 +510,258 @@ h1 {
     border-color: var(--accent);
 }
 
+/* =========================================================
+   PROJECTS
+   ========================================================= */
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    counter-reset: project-number;
+}
+
+.project-card {
+    position: relative;
+    padding: 35px;
+    min-height: 330px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    border: 1px solid var(--border);
+    background: var(--card);
+    counter-increment: project-number;
+
+    transition: var(--transition);
+}
+
+.project-card:hover {
+    border-color: var(--accent);
+}
+
+.project-card::before {
+    content: counter(project-number, decimal-leading-zero);
+    position: absolute;
+    top: 20px;
+    right: 25px;
+
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-subtle);
+}
+
+.project-card h3 {
+    font-size: 25px;
+    margin-bottom: 20px;
+}
+
+.project-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 500px;
+}
+
+.project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+
+    list-style: none;
+    margin-top: 20px;
+}
+
+.project-tags li {
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-soft);
+    line-height: 1.4;
+    white-space: nowrap;
+
+    transition: var(--transition);
+}
+
+.project-tags li:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.project-links {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    margin-top: auto;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+}
+
+.project-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 3px;
+}
+
+.project-links a:hover {
+    color: var(--accent);
+}
+
+.project-view-btn,
+.project-modal-close,
+.project-modal-close-button {
+    border: none;
+    border-bottom: 1px solid var(--accent);
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 0 0 3px;
+    cursor: pointer;
+    transition: var(--transition);
+    line-height: 1.5;
+}
+
+.project-view-btn:hover,
+.project-view-btn:focus-visible {
+    background: transparent;
+}
+
+.project-view-btn:hover,
+.project-view-btn:focus-visible,
+.project-modal-close:hover,
+.project-modal-close-button:hover,
+.project-modal-close:focus-visible,
+.project-modal-close-button:focus-visible {
+    color: var(--accent);
+}
+
+.project-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--transition), visibility var(--transition);
+}
+
+.project-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 3;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 0;
+}
+
+.project-modal-close:hover,
+.project-modal-close:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.project-modal.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.project-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    backdrop-filter: blur(14px) saturate(120%);
+}
+
+body.light-mode .project-modal-backdrop {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.project-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 980px);
+    max-height: 80vh;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+
+.project-modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 12px;
+    padding: 24px;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    /* Column scrolls independently so extra images never get clipped by the dialog */
+    max-height: 80vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.project-modal-gallery img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    display: block;
+    background: #1a1a1a;
+    cursor: zoom-in;
+    transition: border-color var(--transition), opacity var(--transition);
+}
+
+.project-modal-gallery img:hover {
+    border-color: var(--accent);
+}
+
+.project-image-lightbox {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2100;
+    padding: 30px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--transition), visibility var(--transition);
+}
+
+.project-image-lightbox.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
