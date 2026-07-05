@@ -1006,3 +1006,58 @@ body.light-mode .project-modal-backdrop {
     color: var(--accent);
 }
 
+/* =========================================================
+   EXPERIENCE
+   ========================================================= */
+
+.timeline {
+    border-left: 1px solid var(--border);
+    padding-left: 35px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 60px;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+
+    background: var(--accent);
+    border-radius: 50%;
+
+    left: -39px;
+    top: 9px;
+
+    box-shadow: 0 0 10px var(--accent-soft);
+}
+
+.timeline-item h3 {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.timeline-item .skill-tags {
+    margin-top: 15px;
+}
+
+.timeline-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+}
+
+.timeline-org {
+    color: var(--text-soft);
+    margin-top: 10px;
+}
+
+.timeline-item > p:last-child {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 700px;
+}
+
