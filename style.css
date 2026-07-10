@@ -566,6 +566,177 @@ h1 {
 }
 
 /* =========================================================
+   CERTIFICATIONS
+   ========================================================= */
+
+/* Centre the carousel in the middle of the screen. Scoped to
+   .is-active so the id selector can't outrank `main > section`
+   and leave the section visible on every other tab */
+#certifications.is-active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.certifications-carousel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    /* A card stretched across the full 1150px container ran the body copy to
+       ~120 characters a line. Capping the carousel keeps the card a compact,
+       readable size and leaves the arrows right beside it. */
+    width: 100%;
+    max-width: 800px;
+    margin-inline: auto;
+}
+
+.certifications-grid {
+    display: grid;
+    min-width: 0;
+    /* The card slides in from ±16px — clip it to its own cell so the slide
+       can never run over the arrows (the gaps get tight on phones) */
+    overflow: clip;
+}
+
+.certification-arrow {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.certification-arrow:hover,
+.certification-arrow:focus-visible {
+    /* Block the global button:hover red flood — only border + icon react */
+    background: var(--card);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Minimalist line arrows (SVG inherits color via currentColor) */
+.certification-arrow .arrow-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.certification-card {
+    grid-area: 1 / 1;
+    position: relative;
+    padding: 26px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translateX(16px);
+    transition: opacity 0.25s ease, transform 0.35s var(--ease), border-color var(--transition);
+}
+
+.certification-card.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.certification-card.slide-from-left.is-active {
+    animation: certification-slide-from-left 0.35s var(--ease) both;
+}
+
+.certification-card.slide-from-right.is-active {
+    animation: certification-slide-from-right 0.35s var(--ease) both;
+}
+
+@keyframes certification-slide-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes certification-slide-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.certification-card:hover {
+    border-color: var(--accent);
+}
+
+.certification-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.certification-content h3 {
+    font-size: 20px;
+    line-height: 1.25;
+    margin-bottom: 10px;
+}
+
+.certification-content p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.certification-meta {
+    display: block;
+    margin-top: 15px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+
+.certification-verify {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    margin-top: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--accent);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    transition: var(--transition);
+}
+
+.certification-verify:hover,
+.certification-verify:focus-visible {
+    color: var(--accent);
+}
+
+/* =========================================================
    PROJECTS
    ========================================================= */
 
