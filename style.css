@@ -511,6 +511,344 @@ h1 {
 }
 
 /* =========================================================
+   ABOUT — "Beyond Development" photo archive
+   ========================================================= */
+
+/* Lock the archive to a single screen — flex column fills the
+   viewport, nothing scrolls. Because the stage hugs its frame (see
+   .about-gallery), the portrait's top edge is simply this top padding,
+   so padding it by "half the viewport minus half the frame" drops the
+   portrait's centre exactly onto the section's midline. The manifesto
+   then hangs below it and takes whatever room is left. The clamp()
+   mirrors the frame's own 50vh / 180px / 560px sizing, so the centring
+   still holds when the frame hits its cap on very tall screens. */
+#about {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: calc(50vh - clamp(90px, 25vh, 280px)) 30px 0;
+}
+
+/* The id selector above outranks a plain `main > section` rule, so the
+   archive has to be sent back to hidden by hand while another section
+   is up — otherwise it stays rendered under every page (it used to
+   appear above Contact when that tab was picked) */
+main > section#about:not(.is-active) {
+    display: none;
+}
+
+/* --- Main stage: arrows flank a portrait frame --- */
+
+.about-gallery {
+    /* Hug the frame exactly: no growing (which would leave slack for
+       the portrait to float in) and no shrinking (which would clip it),
+       so the frame's top is the section's top padding and the gap above
+       the manifesto is just the manifesto's own margin */
+    flex: none;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    align-content: center;
+    align-items: center;
+    justify-items: center;
+    gap: 14px 16px;
+    overflow: hidden;
+}
+
+/* The wrapper dissolves so the frame + rail sit directly on the grid */
+.gallery-stage {
+    display: contents;
+}
+
+.gallery-prev {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.gallery-next {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+/* The big picture with a glimpse of the previous and next photos
+   peeking in from either side */
+.gallery-viewstage {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    justify-self: center;
+    display: grid;
+    justify-items: center;
+}
+
+/* Peeks hang just outside the big picture, clipped by the gallery edge */
+.gallery-peek {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 72px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    overflow: hidden;
+    cursor: pointer;
+    filter: grayscale(1);
+    opacity: 0.5;
+    transition: opacity var(--transition), filter var(--transition),
+        border-color var(--transition);
+}
+
+.gallery-peek-prev {
+    right: calc(100% + 14px);
+}
+
+.gallery-peek-next {
+    left: calc(100% + 14px);
+}
+
+.gallery-peek img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Prev shows the right slice of the outgoing photo, next the left
+   slice of the incoming one — like frames on a film reel */
+.gallery-peek-prev img {
+    object-position: right center;
+}
+
+.gallery-peek-next img {
+    object-position: left center;
+}
+
+.gallery-peek:hover,
+.gallery-peek:focus-visible {
+    /* Block the global button:hover red flood — just wake the frame up */
+    background: var(--card);
+    color: var(--text);
+    border-color: var(--accent);
+    filter: none;
+    opacity: 1;
+}
+
+/* Slide the peeks in the direction of travel on every swap */
+.gallery-viewstage.dir-next .gallery-peek.is-swap img {
+    animation: peek-from-right 0.45s var(--ease);
+}
+
+.gallery-viewstage.dir-prev .gallery-peek.is-swap img {
+    animation: peek-from-left 0.45s var(--ease);
+}
+
+@keyframes peek-from-right {
+    from {
+        transform: translateX(16px) scale(1.05);
+        opacity: 0.3;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes peek-from-left {
+    from {
+        transform: translateX(-16px) scale(1.05);
+        opacity: 0.3;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.gallery-frame {
+    grid-area: 1 / 1;
+    position: relative;
+    height: 50vh;
+    /* Claim horizontal drags for the swipe gesture; vertical pans still
+       scroll the page */
+    touch-action: pan-y;
+    min-height: 180px;
+    max-height: 560px;
+    aspect-ratio: 3 / 4;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.gallery-img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: var(--bg-soft);
+    opacity: 0;
+}
+
+.gallery-img.is-active {
+    opacity: 1;
+}
+
+/* Legibility scrim behind the HUD corner */
+.gallery-frame::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 42%;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Dot wave scoped to the picture box (same look as the navbar wave,
+   but the rest of the page stays visible while it plays) */
+.gallery-wave {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: none;
+    z-index: 2;
+}
+
+/* HUD overlay — big red index locked to the bottom-left */
+.gallery-hud {
+    position: absolute;
+    left: 18px;
+    bottom: 16px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-mono);
+}
+
+.gallery-index {
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: var(--accent);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.gallery-total {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Auto-scroll progress bar — a thin accent line pinned to the bottom of
+   the picture that fills over the 4s auto-advance, so the movement reads
+   as automatic (the fill duration matches AUTO_DELAY in index.js). It
+   freezes while the archive is hovered/focused and restarts on every
+   swap. */
+.gallery-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.18);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.gallery-progress-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+
+.gallery-progress-fill.is-running {
+    animation: gallery-progress 4s linear forwards;
+}
+
+/* Hovering or focusing the archive holds the countdown (see the pause
+   handlers in setupPictureGallery) */
+.about-gallery.is-paused .gallery-progress-fill.is-running {
+    animation-play-state: paused;
+}
+
+@keyframes gallery-progress {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.gallery-arrow {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gallery-arrow:hover,
+.gallery-arrow:focus-visible {
+    /* Block the global button:hover red flood — only border + icon react */
+    background: var(--card);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Minimalist line arrows (SVG inherits color via currentColor) */
+.gallery-arrow .arrow-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* --- Manifesto line below the archive --- */
+
+.about-content {
+    flex-shrink: 0;
+    max-width: 660px;
+    margin: 22px auto 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-muted);
+}
+
+.about-content p:first-child {
+    color: var(--text);
+}
+
+/* Keep the archive on one screen on shorter laptop viewports. The
+   centring padding is viewport-relative, so it needs no override here */
+@media (max-height: 780px) {
+    .about-content {
+        margin-top: 14px;
+        font-size: 12px;
+    }
+}
+
+/* =========================================================
    SKILLS
    ========================================================= */
 
