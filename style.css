@@ -1570,3 +1570,274 @@ body.light-mode .project-modal-backdrop {
     max-width: 700px;
 }
 
+/* =========================================================
+   CONTACT
+   ========================================================= */
+
+/* The address is the anchor: half a screen of air sits above it so its
+   centre lands dead on the middle line, and everything else stacks
+   underneath. Scoped to .is-active so the id selector can't outrank
+   `main > section` and leave the section visible on every other tab */
+#contact.is-active {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 50vh;
+    padding-bottom: 0;
+}
+
+/* --- Email anchor with the social row tucked under it --- */
+
+.contact-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* No gap needed: the address' half-height lift already leaves the
+       space beneath it before the social row */
+    gap: 0;
+    text-align: center;
+    padding: 0 0 60px;
+}
+
+.contact-email {
+    /* Grid keeps the address and its confirmation in one cell, so the
+       underline holds the address width and nothing reflows mid-swap */
+    display: inline-grid;
+    /* The stage is pushed half a screen down, so lift the address by half
+       its own height to sit its centre exactly on the middle line */
+    transform: translateY(-50%);
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: clamp(1.15rem, 4.2vw, 2rem);
+    letter-spacing: -0.5px;
+    color: var(--text);
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--accent);
+    word-break: break-all;
+    transition: color var(--transition), border-color var(--transition), text-shadow var(--transition);
+}
+
+.contact-email:hover,
+.contact-email:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+    text-shadow: 0 0 32px var(--accent-soft);
+}
+
+.contact-email-line {
+    grid-area: 1 / 1;
+    transition: opacity 0.32s var(--ease), transform 0.32s var(--ease),
+        filter 0.32s var(--ease);
+}
+
+/* Hover swap — the address lifts and dissolves while "Copy me" rises
+   into its place, then the two keep trading places on a loop for as long
+   as the pointer rests on the address. Scoped to real pointers so a tap
+   on a phone can't leave the hint stuck on afterwards */
+@media (hover: hover) and (pointer: fine) {
+    .contact-email:hover .contact-email-address,
+    .contact-email:focus-visible .contact-email-address {
+        animation: contact-email-address-cycle 4.2s var(--ease) infinite;
+    }
+
+    .contact-email:hover .contact-email-hint,
+    .contact-email:focus-visible .contact-email-hint {
+        animation: contact-email-hint-cycle 4.2s var(--ease) infinite;
+    }
+}
+
+/* One full swap-and-return beat: the address holds, dissolves upward as
+   the hint rises, the hint holds, then the address drops back in — and
+   the whole thing repeats while the address is hovered */
+@keyframes contact-email-address-cycle {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+    12%,
+    55% {
+        opacity: 0;
+        transform: translateY(-10px);
+        filter: blur(4px);
+    }
+    67%,
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes contact-email-hint-cycle {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+        filter: blur(4px);
+    }
+    12%,
+    55% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+    67%,
+    100% {
+        opacity: 0;
+        transform: translateY(10px);
+        filter: blur(4px);
+    }
+}
+
+/* Resting state for the confirmation and the hover hint: both park
+   under the address, blurred — the hint borrows the confirmation's
+   entrance beat for beat */
+.contact-email-hint,
+.contact-email-copied {
+    align-self: center;
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+    color: var(--accent);
+    font-size: 0.78em;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+/* Copied state — the address lifts and dissolves, the red confirmation
+   slides up into its place, then the whole thing settles back */
+.contact-email.is-copied {
+    border-color: var(--accent);
+    text-shadow: 0 0 32px var(--accent-soft);
+}
+
+.contact-email.is-copied .contact-email-address {
+    animation: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    filter: blur(4px);
+}
+
+/* The confirmation outranks the hover swap: park the hint again even if
+   the pointer is still resting on the address */
+.contact-email.is-copied .contact-email-hint {
+    animation: none;
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+}
+
+.contact-email.is-copied .contact-email-copied {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+/* The hero's icon-sized email link has no room for a label swap, so it
+   just glows accent for a beat instead */
+.hero-social.is-copied {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* --- Actions --- */
+
+.contact-actions {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 75px;
+}
+
+/* Match the hero's Resume button exactly — this is the only .btn in
+   .contact-actions, so block the solid .btn:first-child style */
+.contact-actions .btn {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+/* Hero CTAs and the contact Resume share one hover: the button floods
+   accent, lifts off the page and picks up a red halo. Both groups are
+   listed because each one sits under its own resting rule */
+.hero-cta .btn:hover,
+.hero-cta .btn:focus-visible,
+.contact-actions .btn:hover,
+.contact-actions .btn:focus-visible {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--accent-soft), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+button {
+    width: fit-content;
+
+    padding: 14px 25px;
+
+    background: var(--text);
+    color: var(--bg);
+
+    border: none;
+
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition: var(--transition);
+}
+
+button:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* --- Social row, sitting right under the address --- */
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 26px;
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 3px;
+    border: none;
+    border-bottom: 1px solid var(--accent);
+    background: transparent;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.social-links a svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.social-links a:hover,
+.social-links a:focus-visible {
+    background: transparent;
+    color: var(--accent);
+}
+
+/* Keep the address on the middle line with the whole section still on one
+   screen on short viewports — the stack underneath tightens rather than
+   pushing the section past the fold */
+@media (max-height: 640px) {
+    .contact-stage {
+        padding-bottom: 32px;
+    }
+
+    .contact-actions {
+        padding-bottom: 38px;
+    }
+}
+
