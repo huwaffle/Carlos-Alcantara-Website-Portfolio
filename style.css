@@ -1841,3 +1841,178 @@ button:hover {
     }
 }
 
+/* =========================================================
+   SCROLL TOP BUTTON
+   ========================================================= */
+
+.scroll-top {
+    position: fixed;
+    right: 30px;
+    bottom: 90px;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity var(--transition), transform var(--transition),
+                visibility var(--transition), color var(--transition),
+                border-color var(--transition), background-color var(--transition);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    z-index: 1500;
+}
+
+.scroll-top .arrow-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.scroll-top.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.scroll-top:hover,
+.scroll-top:focus-visible {
+    /* Block the global button:hover red flood — only border + icon react */
+    background: var(--bg-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* =========================================================
+   MOBILE MENU (tablet & mobile navigation bar)
+   ========================================================= */
+.mobile-menu-button {
+    display: none;
+    position: relative;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+/* Minimalist line icons (match the arrow buttons): ☰ opens, ✕ closes.
+   Both are stacked in the button and crossfade — pure CSS, driven by
+   aria-expanded, no JS needed. */
+.mobile-menu-button .menu-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    display: block;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.mobile-menu-button .menu-icon-open {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.mobile-menu-button[aria-expanded="true"] .menu-icon-open {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+}
+
+.mobile-menu-button[aria-expanded="true"] .menu-icon-close {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.mobile-menu-button:hover,
+.mobile-menu-button:focus-visible {
+    /* Block the global button:hover red flood — only border + icon react */
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.mobile-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 70px;
+    bottom: 0;
+    background: var(--bg-soft);
+    border-top: 1px solid var(--border);
+    padding: 24px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 999;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity var(--transition), transform var(--transition), visibility var(--transition);
+}
+
+.mobile-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.mobile-nav ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mobile-nav a {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 14px 4px;
+    display: block;
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.mobile-nav a:hover {
+    color: var(--text);
+}
+
+.mobile-theme {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Hide the scroll-to-top button while the mobile menu is open */
+body.menu-open .scroll-top {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
