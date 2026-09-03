@@ -106,3 +106,114 @@ function setupResumeButton() {
     });
 }
 
+function setupContactForm() {
+    const contactForm = document.querySelector(".contact-form");
+
+    if (!contactForm) {
+        return;
+    }
+
+    contactForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (!contactForm.checkValidity()) {
+            return;
+        }
+
+        const formData = new FormData(contactForm);
+        const name = (formData.get("name") || "").toString().trim();
+        const email = (formData.get("email") || "").toString().trim();
+        const message = (formData.get("message") || "").toString().trim();
+
+        const subject = encodeURIComponent(`Portfolio inquiry from ${name || "Visitor"}`);
+        const body = encodeURIComponent(
+            `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+        );
+
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent("carlos.alcantara.iii.27@gmail.com")}&su=${subject}&body=${body}`;
+        const gmailWindow = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+
+        if (!gmailWindow) {
+            window.location.href = `mailto:carlos.alcantara.iii.27@gmail.com?subject=${subject}&body=${body}`;
+        }
+
+        contactForm.reset();
+    });
+}
+
+function setupScrollTopButton() {
+    const scrollButton = document.getElementById("scroll-top");
+
+    if (!scrollButton) {
+        return;
+    }
+
+    function updateScrollButton() {
+        const visible = window.scrollY > window.innerHeight * 0.4;
+        scrollButton.classList.toggle("visible", visible);
+    }
+
+    updateScrollButton();
+    window.addEventListener("scroll", updateScrollButton);
+
+    scrollButton.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            // Jump instead of gliding when the visitor asked for less motion
+            behavior:
+                window.matchMedia &&
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                    ? "auto"
+                    : "smooth"
+        });
+    });
+}
+
+function setupCertificationsCarousel() {
+    const carousel = document.querySelector(".certifications-carousel");
+
+    if (!carousel) {
+        return;
+    }
+
+    const cards = Array.from(carousel.querySelectorAll(".certification-card"));
+    const previousButton = carousel.querySelector(".certification-previous");
+    const nextButton = carousel.querySelector(".certification-next");
+    let currentIndex = 0;
+
+    function showCertification(index, direction = "next") {
+        currentIndex = (index + cards.length) % cards.length;
+
+        cards.forEach((card, cardIndex) => {
+            const isActive = cardIndex === currentIndex;
+
+            if (isActive) {
+                // Clear the animation classes and force a reflow so the slide
+                // animation replays even when the same card stays active
+                // (e.g. when there is only one certification).
+                card.classList.remove("slide-from-left", "slide-from-right");
+                void card.offsetWidth;
+            }
+
+            card.classList.toggle("is-active", isActive);
+            card.classList.toggle("slide-from-left", isActive && direction === "previous");
+            card.classList.toggle("slide-from-right", isActive && direction === "next");
+            card.setAttribute("aria-hidden", String(!isActive));
+        });
+    }
+
+    if (previousButton) {
+        previousButton.addEventListener("click", () => {
+            showCertification(currentIndex - 1, "previous");
+        });
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener("click", () => {
+            showCertification(currentIndex + 1, "next");
+        });
+    }
+
+    showCertification(currentIndex);
+}
+
