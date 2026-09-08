@@ -217,3 +217,133 @@ function setupCertificationsCarousel() {
     showCertification(currentIndex);
 }
 
+function setupProjectModal() {
+    const modal = document.getElementById("project-modal");
+    const lightbox = document.getElementById("project-image-lightbox");
+
+    if (!modal) {
+        return;
+    }
+
+    const title = document.getElementById("project-modal-title");
+    const description = document.getElementById("project-modal-description");
+    const gallery = document.getElementById("project-modal-gallery");
+    const tagsList = document.getElementById("project-modal-tags");
+    const githubLink = document.getElementById("project-modal-github");
+    const closeButtons = modal.querySelectorAll("[data-close-modal], .project-modal-close, .project-modal-close-button");
+    const projectButtons = document.querySelectorAll(".project-view-btn");
+    const lightboxImage = lightbox ? lightbox.querySelector("img") : null;
+    const lightboxClose = lightbox ? lightbox.querySelector(".project-image-lightbox-close") : null;
+
+    function openImageLightbox(src, alt) {
+        if (!lightbox || !lightboxImage) {
+            return;
+        }
+
+        lightboxImage.src = src;
+        lightboxImage.alt = alt;
+        lightbox.classList.add("is-open");
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeImageLightbox() {
+        if (!lightbox) {
+            return;
+        }
+
+        lightbox.classList.remove("is-open");
+        lightbox.setAttribute("aria-hidden", "true");
+        if (!modal.classList.contains("is-open")) {
+            document.body.style.overflow = "";
+        }
+    }
+
+    function openProjectModal(projectCard) {
+        const projectData = {
+            title: projectCard.dataset.title || "Project Details",
+            description: projectCard.dataset.description || "",
+            github: projectCard.dataset.github || "#",
+            tags: (projectCard.dataset.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean),
+            images: (projectCard.dataset.images || "").split(",").map((image) => image.trim()).filter(Boolean)
+        };
+
+        title.textContent = projectData.title;
+        description.textContent = projectData.description;
+
+        tagsList.innerHTML = projectData.tags
+            .map((tag) => `<li>${tag}</li>`)
+            .join("");
+
+        githubLink.href = projectData.github;
+        githubLink.style.display = projectCard.dataset.github ? "" : "none";
+
+        gallery.innerHTML = projectData.images.length
+            ? projectData.images
+                .map((image) => `<img src="${image}" alt="${projectData.title} preview" loading="lazy">`)
+                .join("")
+            : '<img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80" alt="Project preview" loading="lazy">';
+
+        gallery.querySelectorAll("img").forEach((image) => {
+            image.addEventListener("click", () => openImageLightbox(image.src, image.alt));
+        });
+
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeProjectModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        closeImageLightbox();
+        if (!lightbox || !lightbox.classList.contains("is-open")) {
+            document.body.style.overflow = "";
+        }
+    }
+
+    projectButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const projectCard = button.closest(".project-card");
+            if (projectCard) {
+                openProjectModal(projectCard);
+            }
+        });
+    });
+
+    closeButtons.forEach((button) => {
+        button.addEventListener("click", closeProjectModal);
+    });
+
+    if (lightboxClose) {
+        lightboxClose.addEventListener("click", closeImageLightbox);
+    }
+
+    if (lightbox) {
+        lightbox.addEventListener("click", (event) => {
+            if (event.target === lightbox || event.target.matches("[data-close-image-lightbox]")) {
+                closeImageLightbox();
+            }
+        });
+    }
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            if (lightbox && lightbox.classList.contains("is-open")) {
+                closeImageLightbox();
+                return;
+            }
+
+            if (modal.classList.contains("is-open")) {
+                closeProjectModal();
+            }
+        }
+    });
+
+    modal.addEventListener("click", (event) => {
+        if (event.target === modal || event.target.matches("[data-close-modal]")) {
+            closeProjectModal();
+        }
+    });
+}
+
