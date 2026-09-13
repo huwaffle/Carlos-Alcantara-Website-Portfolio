@@ -347,3 +347,83 @@ function setupProjectModal() {
     });
 }
 
+const sectionViews = Array.from(document.querySelectorAll("main > section"));
+
+// Set by setupPictureGallery(); rewinds the "Beyond Development" archive to
+// its first picture each time the section is opened. Stays null until the
+// gallery is set up, which is fine because the gallery starts on picture 1.
+let aboutGalleryReset = null;
+
+function showSection(id) {
+    const target = sectionViews.find((section) => section.id === id) || sectionViews[0];
+
+    if (!target) {
+        return;
+    }
+
+    sectionViews.forEach((section) => {
+        const isActive = section === target;
+        section.classList.toggle("is-active", isActive);
+        section.setAttribute("aria-hidden", String(!isActive));
+    });
+
+    // Opening the photo archive always starts over on the first picture —
+    // the visitor's last position isn't saved or restored anywhere
+    if (target.id === "about" && aboutGalleryReset) {
+        aboutGalleryReset();
+    }
+
+    document.querySelectorAll('nav a[href^="#"]').forEach((link) => {
+        const isCurrent = link.getAttribute("href") === "#" + target.id;
+        link.classList.toggle("is-current", isCurrent);
+
+        if (isCurrent) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
+
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+}
+
+function setupSectionViews() {
+    if (!sectionViews.length) {
+        return;
+    }
+
+    showSection(window.location.hash.slice(1));
+
+    window.addEventListener("hashchange", () => {
+        showSection(window.location.hash.slice(1));
+    });
+}
+
+/* The blocks that ease in one after another when their section opens.
+   Leaf blocks only (no wrappers of other entries), so the fades can't
+   stack on top of each other */
+const CONTENT_REVEAL_SELECTOR = [
+    ".hero-content > *",
+    ".hero-image-wrap",
+    ".project-card",
+    ".timeline-item",
+    ".certification-arrow",
+    ".about-gallery",
+    ".about-content",
+    ".contact-stage",
+    ".social-links .hero-social",
+    ".contact-actions",
+].join(", ");
+
+/* Number each block per section, in DOM order, so the reveal ripples
+   top-to-bottom. The CSS animation replays by itself every time the
+   section is shown again */
+function setupContentReveal() {
+    document.querySelectorAll("main > section").forEach((section) => {
+        section.querySelectorAll(CONTENT_REVEAL_SELECTOR).forEach((block, index) => {
+            block.classList.add("content-reveal");
+            block.style.setProperty("--reveal-index", String(index));
+        });
+    });
+}
+
