@@ -427,3 +427,184 @@ function setupContentReveal() {
     });
 }
 
+function setupDotGrid() {
+    const canvas = document.getElementById("dot-grid");
+
+    if (!canvas) {
+        return;
+    }
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+        return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const SPACING = 26;          // distance between dots in the grid
+    const BASE_RADIUS = 1;       // resting dot radius (px)
+    const HOVER_RADIUS = 150;    // how far the cursor reaches
+    const PULL_DISTANCE = 7;     // max distance a dot is pulled toward the cursor
+    const CROSS_RAMP = 10;       // pull ramps in from this close to the cursor (px)
+    const EASE = 0.1;            // easing for the shared hover-strength fade
+    const FOLLOW = 0.16;         // how closely the glow trails the pointer
+    const RIPPLE_LIFE = 1400;    // click ripple duration (ms)
+    const RIPPLE_REACH = 420;    // click ripple travel distance (px)
+    const RIPPLE_WIDTH = 60;     // click ripple ring thickness (px)
+
+    /* =========================================================
+       >> DOT COLORS — EDIT THESE TO CHANGE THE DOT LOOK
+       ---------------------------------------------------------
+       null = follow the site theme automatically (resting dots:
+       --text in dark mode, --text-subtle in light mode; glow:
+       --accent — all in style.css).
+       Set a value to lock in your own instead:
+           DOT_COLOR    resting dot color   e.g. "#888888"
+           HOVER_COLOR  cursor glow color   e.g. "#00aaff"
+           DOT_OPACITY  dot opacity (0-1)   e.g. 0.3
+       ========================================================= */
+    const DOT_COLOR = null;
+    const HOVER_COLOR = null;
+    const DOT_OPACITY = null;
+    /* =========================================================
+       >> END DOT COLORS
+       ========================================================= */
+
+    let dots = [];
+    let hotDots = [];
+    let width = 0;
+    let height = 0;
+    let frameId = null;
+    let resizeTimer = null;
+    let mouseX = -1000;
+    let mouseY = -1000;
+    let pointerActive = false;
+    let smoothX = -1000;
+    let smoothY = -1000;
+    const ripples = [];
+    // Shared, eased hover presence: 1 while the pointer is over the page,
+    // eases back to 0 when it leaves (that fade is what springs dots home)
+    let hoverStrength = 0;
+
+    // Fallback colors — only used if the theme colors can't be read.
+    // (To change dot colors, use the DOT_COLORS block above, not these.)
+    const baseColor = { r: 245, g: 245, b: 245 };   // fallback resting dot color
+    const accentColor = { r: 255, g: 0, b: 0 };     // fallback hover glow color
+    let baseAlpha = 0.2;                            // fallback dot opacity
+
+    // Parses "#rgb" or "#rrggbb" into {r, g, b}; returns `fallback` if invalid
+    function parseHex(value, fallback) {
+        let hex = (value || "").trim().replace(/^#/, "");
+
+        if (hex.length === 3) {
+            hex = hex.split("").map((char) => char + char).join("");
+        }
+
+        if (!/^[0-9a-f]{6}$/i.test(hex)) {
+            return fallback;
+        }
+
+        const number = parseInt(hex, 16);
+
+        return {
+            r: (number >> 16) & 255,
+            g: (number >> 8) & 255,
+            b: number & 255
+        };
+    }
+
+    // Rebuilds the dot colors. Called on load, on theme toggle, and on resize.
+    // Order of precedence:
+    //   1. DOT_COLOR / HOVER_COLOR / DOT_OPACITY overrides (see block above)
+    //   2. theme colors from style.css:
+    //        resting dots: --text (dark mode) / --text-subtle (light mode)
+    //        hover glow:   --accent
+    //   3. default fallbacks if neither is available
+    function refreshColors() {
+        const styles = getComputedStyle(document.body);
+        const isLight = document.body.classList.contains("light-mode");
+
+        // Light mode uses --text-subtle (a soft gray) instead of the text
+        // color, so the dot pattern never competes with readable content
+        const themeBase = parseHex(
+            styles.getPropertyValue(isLight ? "--text-subtle" : "--text"),
+            baseColor
+        );
+        const themeAccent = parseHex(styles.getPropertyValue("--accent"), accentColor);
+
+        const forcedBase = parseHex(DOT_COLOR, null);
+        const forcedAccent = parseHex(HOVER_COLOR, null);
+        const finalBase = forcedBase || themeBase;
+        const finalAccent = forcedAccent || themeAccent;
+
+        baseColor.r = finalBase.r;
+        baseColor.g = finalBase.g;
+        baseColor.b = finalBase.b;
+
+        accentColor.r = finalAccent.r;
+        accentColor.g = finalAccent.g;
+        accentColor.b = finalAccent.b;
+
+        if (DOT_OPACITY !== null && DOT_OPACITY !== undefined && Number.isFinite(Number(DOT_OPACITY))) {
+            // Your override: clamp to the valid 0-1 range
+            baseAlpha = Math.max(0, Math.min(1, Number(DOT_OPACITY)));
+        } else {
+            // Theme default dot darkness: very faint in dark mode; in light
+            // mode a soft gray at low opacity so dots stay behind the text
+            baseAlpha = isLight ? 0.2 : 0.14;
+        }
+    }
+
+    function resizeCanvas() {
+        width = canvas.clientWidth || window.innerWidth;
+        height = canvas.clientHeight || window.innerHeight;
+
+        const density = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.round(width * density);
+        canvas.height = Math.round(height * density);
+        context.setTransform(density, 0, 0, density, 0, 0);
+
+        buildGrid();
+    }
+
+    function buildGrid() {
+        dots = [];
+
+        // +3 = one extra column/row of margin on each edge, so the grid
+        // never shows a bare edge while it scrolls
+        const columns = Math.max(2, Math.ceil(width / SPACING) + 3);
+        const rows = Math.max(2, Math.ceil(height / SPACING) + 3);
+        const originX = (width - (columns - 1) * SPACING) / 2;
+        const originY = (height - (rows - 1) * SPACING) / 2;
+
+        for (let row = 0; row < rows; row += 1) {
+            for (let column = 0; column < columns; column += 1) {
+                const x = originX + column * SPACING;
+                const y = originY + row * SPACING;
+
+                dots.push({
+                    x,
+                    y,
+                    pushX: 0,       // hover push for this frame (px)
+                    pushY: 0,
+                    intensity: 0,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+    }
+
+    function render(time) {
+        context.clearRect(0, 0, width, height);
+
+        const seconds = time * 0.001;
+        const still = reducedMotion.matches;
+
+        const targetStrength = pointerActive && !still ? 1 : 0;
+        hoverStrength += (targetStrength - hoverStrength) * EASE;
+        if (hoverStrength < 0.001) {
+            hoverStrength = 0;
+        }
+
