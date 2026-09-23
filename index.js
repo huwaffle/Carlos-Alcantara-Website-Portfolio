@@ -608,3 +608,181 @@ function setupDotGrid() {
             hoverStrength = 0;
         }
 
+        // Cursor glow trails the real pointer for a fluid, magnetic feel
+        if (hoverStrength === 0 || smoothX < -500) {
+            smoothX = mouseX;
+            smoothY = mouseY;
+        } else {
+            smoothX += (mouseX - smoothX) * FOLLOW;
+            smoothY += (mouseY - smoothY) * FOLLOW;
+        }
+
+        // Drop finished click ripples
+        while (ripples.length && time - ripples[0].start > RIPPLE_LIFE) {
+            ripples.shift();
+        }
+
+        const cx = width / 2;
+        const cy = height / 2;
+
+        for (let index = 0; index < dots.length; index += 1) {
+            const dot = dots[index];
+            let drawX = dot.x;
+            let drawY = dot.y;
+            let intensity = 0;
+            let ring = 0;
+
+            if (!still) {
+                if (hoverStrength > 0) {
+                    const dx = dot.x - smoothX;
+                    const dy = dot.y - smoothY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < HOVER_RADIUS) {
+                        const falloff = 1 - distance / HOVER_RADIUS;
+                        const smooth = falloff * falloff * (3 - 2 * falloff);
+                        intensity = smooth * hoverStrength;
+
+                        // Gentle pull toward the cursor, easing off at the centre
+                        if (distance > 0.001) {
+                            const ramp = Math.min(1, distance / CROSS_RAMP);
+                            const pull = smooth * PULL_DISTANCE * hoverStrength * ramp;
+                            drawX -= (dx / distance) * pull;
+                            drawY -= (dy / distance) * pull;
+                        }
+                    }
+                }
+
+                for (let r = 0; r < ripples.length; r += 1) {
+                    const ripple = ripples[r];
+                    const age = (time - ripple.start) / RIPPLE_LIFE;
+                    const dx = dot.x - ripple.x;
+                    const dy = dot.y - ripple.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const gap = Math.abs(distance - age * RIPPLE_REACH);
+
+                    if (gap < RIPPLE_WIDTH) {
+                        const k = (1 - gap / RIPPLE_WIDTH) * (1 - age);
+                        const strength = k * k;
+                        ring += strength;
+
+                        if (distance > 0.001) {
+                            drawX += (dx / distance) * strength * 8;
+                            drawY += (dy / distance) * strength * 8;
+                        }
+                    }
+                }
+            }
+
+            // Idle: a slow, soft sheen drifts outward from the centre
+            let sheen = 0;
+            if (!still) {
+                const ddx = dot.x - cx;
+                const ddy = dot.y - cy;
+                sheen = 0.5 + 0.5 * Math.sin(Math.sqrt(ddx * ddx + ddy * ddy) * 0.012 - seconds * 0.7);
+            }
+
+            const glow = Math.min(1, intensity + ring);
+            const radius = BASE_RADIUS + sheen * 0.35 + intensity * 2.2 + ring * 1.6;
+            const alpha = Math.min(1, baseAlpha * (0.55 + sheen * 0.9) + glow * 0.85);
+
+            const red = Math.round(baseColor.r + (accentColor.r - baseColor.r) * glow);
+            const green = Math.round(baseColor.g + (accentColor.g - baseColor.g) * glow);
+            const blue = Math.round(baseColor.b + (accentColor.b - baseColor.b) * glow);
+
+            context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+            context.beginPath();
+            context.arc(drawX, drawY, radius, 0, Math.PI * 2);
+            context.fill();
+        }
+    }
+
+    function loop(time) {
+        render(time);
+        frameId = window.requestAnimationFrame(loop);
+    }
+
+    function start() {
+        if (frameId !== null) {
+            return;
+        }
+
+        if (reducedMotion.matches) {
+            // Static grid: no idle animation, no cursor motion
+            render(0);
+            return;
+        }
+
+        frameId = window.requestAnimationFrame(loop);
+    }
+
+    function stop() {
+        if (frameId === null) {
+            return;
+        }
+
+        window.cancelAnimationFrame(frameId);
+        frameId = null;
+    }
+
+    window.addEventListener("pointermove", (event) => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        pointerActive = true;
+    }, { passive: true });
+
+    window.addEventListener("pointerdown", (event) => {
+        if (reducedMotion.matches) {
+            return;
+        }
+
+        ripples.push({ x: event.clientX, y: event.clientY, start: performance.now() });
+        if (ripples.length > 4) {
+            ripples.shift();
+        }
+    }, { passive: true });
+
+    document.documentElement.addEventListener("pointerleave", () => {
+        pointerActive = false;
+    });
+
+    window.addEventListener("blur", () => {
+        pointerActive = false;
+    });
+
+    window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+
+        resizeTimer = window.setTimeout(() => {
+            refreshColors();
+            resizeCanvas();
+
+            if (reducedMotion.matches) {
+                render(0);
+            }
+        }, 150);
+    });
+
+    if (typeof reducedMotion.addEventListener === "function") {
+        reducedMotion.addEventListener("change", () => {
+            stop();
+            start();
+        });
+    }
+
+    // Re-read the theme colors whenever light/dark mode changes
+    if ("MutationObserver" in window) {
+        new MutationObserver(() => {
+            refreshColors();
+
+            if (reducedMotion.matches) {
+                render(0);
+            }
+        }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    refreshColors();
+    resizeCanvas();
+    start();
+}
+
