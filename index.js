@@ -786,3 +786,113 @@ function setupDotGrid() {
     start();
 }
 
+// Set by setupNavWave(); plays the shared dot-wave transition and fires
+// its callback when the screen is fully covered (null when unavailable)
+let dotWaveTrigger = null;
+
+function setupLogoRefresh() {
+    const logoLink = document.querySelector(".logo a");
+
+    if (!logoLink) {
+        return;
+    }
+
+    // Prep for a refresh that lands at the very top: stop the browser
+    // from restoring the old scroll position and aim the URL at the hero
+    function prepareTopReload() {
+        try {
+            window.history.scrollRestoration = "manual";
+        } catch (error) {
+            // Very old browsers: scroll restore stays as-is
+        }
+
+        try {
+            window.history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search + "#hero"
+            );
+        } catch (error) {
+            // Some browsers restrict history APIs on file:// URLs
+            window.location.hash = "hero";
+        }
+    }
+
+    // Clicking the <CARLOS ALCANTARA/> logo plays the same left-to-right
+    // dot wave as the nav, then refreshes the page behind the cover —
+    // the fresh page flags itself and plays the reveal wave on boot.
+    // (Without JavaScript the href="#hero" fallback just scrolls home.)
+    logoLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        prepareTopReload();
+
+        const reduceMotion =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // Wave path: refresh behind the fully covered screen
+        if (!reduceMotion && dotWaveTrigger) {
+            dotWaveTrigger(() => {
+                // Flag the fresh page (read by the inline script in
+                // index.html, which paints the cover before first paint)
+                try {
+                    window.sessionStorage.setItem("dot-wave-reveal", "1");
+                } catch (error) {
+                    // Storage unavailable — the refresh still works
+                }
+
+                window.location.reload();
+            });
+            return;
+        }
+
+        // Fallback (reduced motion / no wave): scroll home, then refresh
+        if (window.scrollY === 0) {
+            window.location.reload();
+            return;
+        }
+
+        if (reduceMotion) {
+            window.scrollTo(0, 0);
+            window.location.reload();
+            return;
+        }
+
+        // Otherwise scroll back to the top visibly, then refresh once it
+        // lands (timeout in case the browser never reports scrollend)
+        let refreshed = false;
+        const refresh = () => {
+            if (refreshed) {
+                return;
+            }
+            refreshed = true;
+            window.location.reload();
+        };
+
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        window.addEventListener("scrollend", refresh, { once: true });
+        document.addEventListener("scrollend", refresh, { once: true });
+        window.setTimeout(refresh, 900);
+    });
+}
+
+if (themeSwitches.length) {
+    applySavedTheme();
+    themeSwitches.forEach((btn) => btn.addEventListener("click", updateTheme));
+}
+
+setupEmailCopy();
+setupResumeButton();
+setupContactForm();
+setupScrollTopButton();
+setupCertificationsCarousel();
+setupProjectModal();
+setupContentReveal();
+setupSectionViews();
+setupMobileMenu();
+setupDotGrid();
+setupLogoRefresh();
+setupNavWave();
+setupThemeSlide();
+setupPictureGallery();
+
