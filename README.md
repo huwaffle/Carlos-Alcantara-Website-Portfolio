@@ -1,1 +1,1 @@
-Welcome to my professional potfolio! feel free to check it out!
+Welcome to my professional portfolio! feel free to check it out!
