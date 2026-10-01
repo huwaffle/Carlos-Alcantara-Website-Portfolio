@@ -11,6 +11,9 @@
 
 <body>
 
+    <!-- Animated dot grid background (dots scatter away from the cursor) -->
+    <canvas id="dot-grid" aria-hidden="true"></canvas>
+
     <!-- Decorative background circles (behind all content) -->
     <div class="page-circles" aria-hidden="true">
         <span class="page-circle page-circle-one"></span>
@@ -48,7 +51,15 @@
         </div>
 
         <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
-            <span class="mobile-menu-icon" aria-hidden="true">&#9776;</span>
+            <svg class="menu-icon menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+            </svg>
+            <svg class="menu-icon menu-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+            </svg>
         </button>
 
     </header>
@@ -290,7 +301,10 @@
             <h2>Certifications</h2>
             <div class="certifications-carousel" aria-label="Certifications carousel">
                 <button class="certification-arrow certification-previous" type="button" aria-label="Show previous certification">
-                    <span aria-hidden="true">&#8592;</span>
+                    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                        <path d="M20 12H4" />
+                        <path d="M10 6L4 12l6 6" />
+                    </svg>
                 </button>
 
                 <div class="certifications-grid">
@@ -341,7 +355,10 @@
                 </div>
 
                 <button class="certification-arrow certification-next" type="button" aria-label="Show next certification">
-                    <span aria-hidden="true">&#8594;</span>
+                    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                        <path d="M4 12h16" />
+                        <path d="M14 6l6 6-6 6" />
+                    </svg>
                 </button>
             </div>
         </section>
@@ -359,7 +376,6 @@
         <!-- Contact Section -->
         <section id="contact">
             <h2>Let's Build Something</h2>
-            <p>I am currently looking for internship opportunities and collaborative projects. Feel free to reach out!</p>
             <p class="contact-email-line">For work, collabs &amp; everything else, reach me at
                 <a href="mailto:carlos.alcantara.iii.27@gmail.com" class="contact-email email-copy" data-email="carlos.alcantara.iii.27@gmail.com">carlos.alcantara.iii.27@gmail.com</a>
             </p>
@@ -373,7 +389,10 @@
 
     </main>
     <button id="scroll-top" class="scroll-top" aria-label="Scroll back to top">
-        <span aria-hidden="true">↑</span>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+            <path d="M12 20V4" />
+            <path d="M6 10l6-6 6 6" />
+        </svg>
     </button>
     <div id="copy-toast" class="copy-toast" role="status" aria-live="polite">
         <img class="toast-icon" src="assets/images/icon.png" alt="" aria-hidden="true">
