@@ -379,7 +379,8 @@ function setupDotGrid() {
     const BASE_RADIUS = 1;       // resting dot radius (px)
     const HOVER_RADIUS = 100;    // how far the cursor reaches
     const PUSH_DISTANCE = 24;    // max distance a dot is pushed away
-    const EASE = 0.1;            // hover spring-back smoothing
+    const CROSS_RAMP = 8;        // push ramps in from this close to the cursor (px)
+    const EASE = 0.1;            // easing for the shared hover-strength fade
     const GRID_SPEED = 16;       // whole-grid movement speed (px/s)
 
     /* =========================================================
@@ -409,6 +410,9 @@ function setupDotGrid() {
     let mouseX = -1000;
     let mouseY = -1000;
     let pointerActive = false;
+    // Shared, eased hover presence: 1 while the pointer is over the page,
+    // eases back to 0 when it leaves (that fade is what springs dots home)
+    let hoverStrength = 0;
 
     // Fallback colors — only used if the theme colors can't be read.
     // (To change dot colors, use the DOT_COLORS block above, not these.)
@@ -510,8 +514,8 @@ function setupDotGrid() {
                 dots.push({
                     x,
                     y,
-                    offsetX: 0,     // eased hover push only (px)
-                    offsetY: 0,
+                    pushX: 0,       // hover push for this frame (px)
+                    pushY: 0,
                     intensity: 0,
                     phase: Math.random() * Math.PI * 2
                 });
@@ -533,6 +537,19 @@ function setupDotGrid() {
         const gridShiftX = gridShift;
         const gridShiftY = gridShift;
 
+        // Ease ONE shared hover strength (0 → 1 while the pointer is over
+        // the page, back to 0 when it leaves). The push itself is a pure
+        // function of each dot's CURRENT position — per-dot easing was
+        // removed because dot objects swap visual spots at every wrap
+        // (every SPACING px of travel), which desynced their state and
+        // made a steady hover visibly "reset" about once a second.
+        const targetStrength =
+            pointerActive && !reducedMotion.matches ? 1 : 0;
+        hoverStrength += (targetStrength - hoverStrength) * EASE;
+        if (hoverStrength < 0.001) {
+            hoverStrength = 0;
+        }
+
         hotDots.length = 0;
 
         // COLOR 1/2 — resting dots: baseColor at baseAlpha opacity
@@ -547,12 +564,18 @@ function setupDotGrid() {
             const homeX = dot.x + gridShiftX;
             const homeY = dot.y + gridShiftY;
 
-            // Only the hover push is a per-dot offset
+            // Stateless push: a pure function of this dot's current
+            // position, so the whole-grid wrap can never desync it.
+            // The shared hoverStrength eased above provides the smooth
+            // fade in/out (spring-back when the pointer leaves).
             let pushX = 0;
             let pushY = 0;
             let intensity = 0;
 
-            if (pointerActive && !reducedMotion.matches) {
+            if (
+                !reducedMotion.matches &&
+                (pointerActive || hoverStrength > 0)
+            ) {
                 const dx = homeX - mouseX;
                 const dy = homeY - mouseY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -560,28 +583,29 @@ function setupDotGrid() {
                 if (distance < HOVER_RADIUS) {
                     const falloff = 1 - distance / HOVER_RADIUS;
 
-                    intensity = falloff * falloff;
+                    // Tint follows the pointer directly; the push fades
+                    // with the eased strength
+                    intensity = pointerActive ? falloff * falloff : 0;
 
-                    if (distance > 0.001) {
-                        const push = falloff * PUSH_DISTANCE;
+                    if (distance > 0.001 && hoverStrength > 0) {
+                        // Ramp up from the cursor centre: without it, a dot
+                        // crossing the exact cursor point would flip 180°
+                        // and whip across it in a single frame
+                        const ramp = distance < CROSS_RAMP
+                            ? distance / CROSS_RAMP
+                            : 1;
+                        const push =
+                            falloff * PUSH_DISTANCE * hoverStrength * ramp;
                         pushX = (dx / distance) * push;
                         pushY = (dy / distance) * push;
                     }
                 }
             }
-
-            if (reducedMotion.matches) {
-                // Static render: no residual push
-                dot.offsetX = 0;
-                dot.offsetY = 0;
-            } else {
-                // Ease the push so dots spring back smoothly after hover
-                dot.offsetX += (pushX - dot.offsetX) * EASE;
-                dot.offsetY += (pushY - dot.offsetY) * EASE;
-            }
             dot.intensity = intensity;
 
             if (intensity > 0.02) {
+                dot.pushX = pushX;
+                dot.pushY = pushY;
                 hotDots.push(dot);
                 continue;
             }
@@ -591,9 +615,8 @@ function setupDotGrid() {
                 ? 0
                 : Math.sin(seconds * 1.4 + dot.phase) * 0.2;
             const radius = BASE_RADIUS + breathe;
-            // Grid motion applies instantly (easing it would stutter at the wrap)
-            const drawX = homeX + dot.offsetX;
-            const drawY = homeY + dot.offsetY;
+            const drawX = homeX + pushX;
+            const drawY = homeY + pushY;
 
             context.moveTo(drawX + radius, drawY);
             context.arc(drawX, drawY, radius, 0, Math.PI * 2);
@@ -613,8 +636,8 @@ function setupDotGrid() {
             // resting dots are darker
             const alpha = Math.min(1, baseAlpha + intensity * 0.87);
             const radius = BASE_RADIUS + intensity * 2.5;
-            const drawX = dot.x + gridShiftX + dot.offsetX;
-            const drawY = dot.y + gridShiftY + dot.offsetY;
+            const drawX = dot.x + gridShiftX + dot.pushX;
+            const drawY = dot.y + gridShiftY + dot.pushY;
 
             context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
             context.beginPath();
