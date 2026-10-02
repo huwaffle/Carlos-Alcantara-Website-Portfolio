@@ -896,3 +896,275 @@ setupNavWave();
 setupThemeSlide();
 setupPictureGallery();
 
+function setupPictureGallery() {
+    const gallery = document.querySelector(".about-gallery");
+
+    if (!gallery) {
+        return;
+    }
+
+    const images = Array.from(gallery.querySelectorAll(".gallery-img"));
+    const prevButton = gallery.querySelector(".gallery-prev");
+    const nextButton = gallery.querySelector(".gallery-next");
+    const frame = gallery.querySelector(".gallery-frame");
+    const waveCanvas = gallery.querySelector(".gallery-wave");
+    const indexLabel = gallery.querySelector(".gallery-index");
+    const section = gallery.closest("section");
+    const viewstage = gallery.querySelector(".gallery-viewstage");
+    const peekPrev = gallery.querySelector(".gallery-peek-prev");
+    const peekNext = gallery.querySelector(".gallery-peek-next");
+    const peekPrevImg = peekPrev ? peekPrev.querySelector("img") : null;
+    const peekNextImg = peekNext ? peekNext.querySelector("img") : null;
+
+    if (images.length < 2 || !prevButton || !nextButton) {
+        return;
+    }
+
+    // The dot wave runs INSIDE the picture box only — the rest of the
+    // page stays fully visible while the picture swaps behind the cover.
+    // 1.8× speed keeps the picture swaps snappy.
+    const playPictureWave =
+        frame && waveCanvas
+            ? createDotWavePlayer(
+                  waveCanvas,
+                  () => ({
+                      width: frame.clientWidth,
+                      height: frame.clientHeight,
+                  }),
+                  1.8
+              )
+            : null;
+
+    const reduceMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let activeIndex = 0;
+
+    function updateHud(direction) {
+        const index = String(activeIndex + 1).padStart(2, "0");
+
+        if (indexLabel) {
+            indexLabel.textContent = index;
+        }
+
+        images.forEach((image, i) => {
+            image.classList.toggle("is-active", i === activeIndex);
+        });
+
+        // Keep the side glimpses showing the real neighbours
+        const prevIndex = (activeIndex - 1 + images.length) % images.length;
+        const nextIndex = (activeIndex + 1) % images.length;
+
+        if (peekPrevImg) {
+            peekPrevImg.src = images[prevIndex].getAttribute("src");
+        }
+
+        if (peekNextImg) {
+            peekNextImg.src = images[nextIndex].getAttribute("src");
+        }
+
+        // Nudge the peeks in the direction we just travelled
+        if (direction && viewstage) {
+            viewstage.classList.remove("dir-next", "dir-prev");
+            viewstage.classList.add(
+                direction === "prev" ? "dir-prev" : "dir-next"
+            );
+
+            [peekPrev, peekNext].forEach((peek) => {
+                if (!peek) {
+                    return;
+                }
+
+                peek.classList.remove("is-swap");
+                void peek.offsetWidth; // restart the animation
+                peek.classList.add("is-swap");
+            });
+        }
+    }
+
+    // Swaps to the given index; fromRight makes the wave enter from the
+    // right edge, so the dot transition always follows the movement.
+    // fromAuto marks swaps fired by the auto-advance timer (its own move
+    // just restarts the countdown bar without resetting the timer).
+    function swapTo(target, fromRight, fromAuto) {
+        const next = (target + images.length) % images.length;
+
+        if (next === activeIndex) {
+            return;
+        }
+
+        const swap = () => {
+            activeIndex = next;
+            updateHud(fromRight ? "prev" : "next");
+        };
+
+        if (reduceMotion || !playPictureWave) {
+            swap();
+        } else {
+            playPictureWave(swap, false, fromRight);
+        }
+
+        // Every manual move (arrow, side glimpse or swipe) rewinds the
+        // countdown and restarts the timer, so the next auto beat always
+        // gets a full delay instead of firing right after the click.
+        // An auto move- or a click landed while the picture is paused —
+        // only replays the bar to stay in step with the running/frozen beat.
+        if (fromAuto || autoPaused) {
+            restartProgress();
+        } else {
+            beginCountdown();
+        }
+    }
+
+    prevButton.addEventListener("click", () => swapTo(activeIndex - 1, true));
+    nextButton.addEventListener("click", () => swapTo(activeIndex + 1, false));
+
+    if (peekPrev) {
+        peekPrev.addEventListener("click", () => swapTo(activeIndex - 1, true));
+    }
+
+    if (peekNext) {
+        peekNext.addEventListener("click", () => swapTo(activeIndex + 1, false));
+    }
+
+    // Phones hide the flanking arrows and the side glimpses (see the media
+    // queries in style.css), so the picture is swiped/dragged instead.
+    // Pointer events cover touch, pen and mouse alike, and the drag is
+    // ignored unless it's clearly horizontal, so a page scroll never turns
+    // the page by accident.
+    if (frame) {
+        const SWIPE_DISTANCE = 40;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragging = false;
+
+        // Keep the browser from starting its native image drag, which would
+        // swallow the pointerup that ends the gesture
+        frame.addEventListener("dragstart", (event) => event.preventDefault());
+
+        frame.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "mouse" && event.button !== 0) {
+                return;
+            }
+
+            dragging = true;
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+        });
+
+        frame.addEventListener("pointerup", (event) => {
+            if (!dragging) {
+                return;
+            }
+
+            dragging = false;
+
+            const dx = event.clientX - dragStartX;
+            const dy = event.clientY - dragStartY;
+
+            if (Math.abs(dx) < SWIPE_DISTANCE || Math.abs(dx) < Math.abs(dy)) {
+                return;
+            }
+
+            if (dx < 0) {
+                swapTo(activeIndex + 1, false);
+            } else {
+                swapTo(activeIndex - 1, true);
+            }
+        });
+
+        frame.addEventListener("pointercancel", () => {
+            dragging = false;
+        });
+    }
+
+    // Auto-archive: keeps shuffling every 4s, while the bottom progress bar
+    // fills over the same beat so the movement reads as automatic. Pauses
+    // while the gallery is hovered or focused, and skips while the section
+    // isn't on screen.
+    const AUTO_DELAY = 4000;
+    const progressFill = gallery.querySelector(".gallery-progress-fill");
+    let autoTimer = null;
+    let autoPaused = false;
+
+    function galleryVisible() {
+        return !section || section.classList.contains("is-active");
+    }
+
+    function clearAutoTimer() {
+        if (autoTimer !== null) {
+            window.clearInterval(autoTimer);
+            autoTimer = null;
+        }
+    }
+
+    // Replays the fill animation from zero. The forced reflow between runs
+    // lets the same animation restart even when the class is already present.
+    function restartProgress() {
+        if (!progressFill) {
+            return;
+        }
+
+        progressFill.classList.remove("is-running");
+        void progressFill.offsetWidth;
+        progressFill.classList.add("is-running");
+    }
+
+    function beginCountdown() {
+        if (reduceMotion) {
+            return;
+        }
+
+        clearAutoTimer();
+        gallery.classList.remove("is-paused");
+        restartProgress();
+
+        autoTimer = window.setInterval(() => {
+            if (!galleryVisible()) {
+                return;
+            }
+
+            swapTo(activeIndex + 1, false, true);
+        }, AUTO_DELAY);
+    }
+
+    function stopAuto() {
+        autoPaused = true;
+        clearAutoTimer();
+        gallery.classList.add("is-paused");
+    }
+
+    function startAuto() {
+        autoPaused = false;
+        beginCountdown();
+    }
+
+    // Reopen the archive on the first picture and restart the countdown —
+    // the last photo looked at is deliberately not remembered. Called by
+    // showSection whenever the section comes into view (the swap happens
+    // behind the nav wave's cover, so the jump is never seen).
+    aboutGalleryReset = function resetGallery() {
+        activeIndex = 0;
+        updateHud();
+        startAuto();
+    };
+
+    // Pause the countdown only while the pointer is over the picture itself
+    // (not the whole archive), so the arrow buttons flanking it stay live and
+    // a click there can restart the beat.
+    if (frame) {
+        frame.addEventListener("mouseenter", stopAuto);
+        frame.addEventListener("mouseleave", startAuto);
+        frame.addEventListener("focusin", stopAuto);
+        frame.addEventListener("focusout", (event) => {
+            if (!frame.contains(event.relatedTarget)) {
+                startAuto();
+            }
+        });
+    }
+
+    updateHud();
+    startAuto();
+}
+
