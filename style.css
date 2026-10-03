@@ -280,6 +280,24 @@ section > h2::before {
     transform: translateY(0);
 }
 
+/* Hero is the one section already on screen at load, so the scroll
+   observer never fades it in — this plays the exact same fade on page
+   load instead (backwards fill keeps the first paint at opacity 0) */
+#hero {
+    animation: hero-fade-in 0.7s ease backwards;
+}
+
+@keyframes hero-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(28px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* =========================================================
    HEADER
    ========================================================= */
@@ -749,6 +767,10 @@ h1 {
         opacity: 1;
         transform: none;
         transition: none;
+    }
+
+    #hero {
+        animation: none;
     }
 
     .certification-card,
