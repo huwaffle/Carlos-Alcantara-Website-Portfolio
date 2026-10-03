@@ -223,6 +223,19 @@ body {
 }
 
 
+/* Dot-wave transition overlay (covers the screen while a nav click
+   jumps to its section; hidden whenever no wave is playing) */
+#wave-transition {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3000;
+    display: none;
+}
+
+
 /* =========================================================
    GLOBAL
    ========================================================= */

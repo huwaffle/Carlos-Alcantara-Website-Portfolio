@@ -14,6 +14,57 @@
     <!-- Animated dot grid background (dots scatter away from the cursor) -->
     <canvas id="dot-grid" aria-hidden="true"></canvas>
 
+    <!-- Dot-wave transition overlay (plays between nav clicks and sections) -->
+    <canvas id="wave-transition" aria-hidden="true"></canvas>
+
+    <!-- Pre-paint cover: if the logo's wave-refresh flagged this load,
+         paint the full dot cover NOW (during parse, before first paint)
+         and let index.js play the reveal wave. The timeout hides the
+         cover again if index.js never takes over. -->
+    <script>
+        (function () {
+            var flag = "dot-wave-reveal";
+            try {
+                if (sessionStorage.getItem(flag) !== "1") return;
+                sessionStorage.removeItem(flag);
+            } catch (error) {
+                return;
+            }
+
+            var canvas = document.getElementById("wave-transition");
+            var context = canvas.getContext("2d");
+            var dpr = window.devicePixelRatio || 1;
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            var spacing = 22; // keep in sync with SPACING in index.js
+            var cover = spacing * 0.78;
+
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
+            canvas.style.display = "block";
+            context.setTransform(dpr, 0, 0, dpr, 0, 0);
+            context.fillStyle =
+                getComputedStyle(document.documentElement)
+                    .getPropertyValue("--accent").trim() || "#ff0000";
+
+            context.beginPath();
+            for (var y = spacing / 2; y < height + spacing; y += spacing) {
+                for (var x = spacing / 2; x < width + spacing; x += spacing) {
+                    context.moveTo(x + cover, y);
+                    context.arc(x, y, cover, 0, Math.PI * 2);
+                }
+            }
+            context.fill();
+
+            window.__dotWaveReveal = true;
+            window.__dotWaveRevealTimer = setTimeout(function () {
+                // index.js never took over — don't trap the user behind red
+                canvas.style.display = "none";
+                window.__dotWaveReveal = false;
+            }, 2000);
+        })();
+    </script>
+
     <!-- Decorative background circles (behind all content) -->
     <div class="page-circles" aria-hidden="true">
         <span class="page-circle page-circle-one"></span>

@@ -724,6 +724,10 @@ function setupDotGrid() {
     start();
 }
 
+// Set by setupNavWave(); plays the shared dot-wave transition and fires
+// its callback when the screen is fully covered (null when unavailable)
+let dotWaveTrigger = null;
+
 function setupLogoRefresh() {
     const logoLink = document.querySelector(".logo a");
 
@@ -731,21 +735,15 @@ function setupLogoRefresh() {
         return;
     }
 
-    // Clicking the <CARLOS ALCANTARA/> logo scrolls back to the top and
-    // fully refreshes the page. (Without JavaScript the href="#hero"
-    // fallback just scrolls home.)
-    logoLink.addEventListener("click", (event) => {
-        event.preventDefault();
-
-        // Stop the browser from restoring the old scroll position after
-        // the reload — otherwise it would bring the page back where it was
+    // Prep for a refresh that lands at the very top: stop the browser
+    // from restoring the old scroll position and aim the URL at the hero
+    function prepareTopReload() {
         try {
             window.history.scrollRestoration = "manual";
         } catch (error) {
-            // Very old browsers: the explicit scroll below still runs
+            // Very old browsers: scroll restore stays as-is
         }
 
-        // Aim the URL at the hero so the fresh page opens at the very top
         try {
             window.history.replaceState(
                 null,
@@ -756,18 +754,42 @@ function setupLogoRefresh() {
             // Some browsers restrict history APIs on file:// URLs
             window.location.hash = "hero";
         }
+    }
 
-        // Already at the top? Refresh right away
-        if (window.scrollY === 0) {
-            window.location.reload();
-            return;
-        }
+    // Clicking the <CARLOS ALCANTARA/> logo plays the same left-to-right
+    // dot wave as the nav, then refreshes the page behind the cover —
+    // the fresh page flags itself and plays the reveal wave on boot.
+    // (Without JavaScript the href="#hero" fallback just scrolls home.)
+    logoLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        prepareTopReload();
 
         const reduceMotion =
             window.matchMedia &&
             window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        // Reduced motion: jump straight to the top and refresh
+        // Wave path: refresh behind the fully covered screen
+        if (!reduceMotion && dotWaveTrigger) {
+            dotWaveTrigger(() => {
+                // Flag the fresh page (read by the inline script in
+                // index.html, which paints the cover before first paint)
+                try {
+                    window.sessionStorage.setItem("dot-wave-reveal", "1");
+                } catch (error) {
+                    // Storage unavailable — the refresh still works
+                }
+
+                window.location.reload();
+            });
+            return;
+        }
+
+        // Fallback (reduced motion / no wave): scroll home, then refresh
+        if (window.scrollY === 0) {
+            window.location.reload();
+            return;
+        }
+
         if (reduceMotion) {
             window.scrollTo(0, 0);
             window.location.reload();
@@ -807,6 +829,219 @@ setupScrollReveal();
 setupMobileMenu();
 setupDotGrid();
 setupLogoRefresh();
+setupNavWave();
+
+function setupNavWave() {
+    const overlay = document.getElementById("wave-transition");
+    const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+    if (!overlay) {
+        return;
+    }
+
+    const context = overlay.getContext("2d");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    // Dot-wave page transition: a wavefront enters from the LEFT edge and
+    // sweeps right, covering the screen in dots; the view changes behind
+    // the cover, then the wave keeps travelling right and washes away.
+    const SPACING = 22;            // wave dot lattice (px)
+    const COVER = SPACING * 0.78;  // radius that guarantees full coverage
+    const WAVE_IN = 280;           // left-to-right front travel while growing (ms)
+    const GROW = 130;              // per-dot grow duration (ms)
+    const HOLD = 50;               // full-cover pause — the change happens here
+    const WAVE_OUT = 240;          // left-to-right front travel while shrinking (ms)
+    const SHRINK = 110;            // per-dot shrink duration (ms)
+    const COVER_DONE = WAVE_IN + GROW;
+    const OUT_START = COVER_DONE + HOLD;
+    const TOTAL = OUT_START + WAVE_OUT + SHRINK;
+
+    let waveActive = false;
+    let dots = [];
+    let width = 0;
+    let height = 0;
+
+    function clamp01(value) {
+        return value < 0 ? 0 : value > 1 ? 1 : value;
+    }
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function buildWave() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        const dpr = window.devicePixelRatio || 1;
+        overlay.width = Math.round(width * dpr);
+        overlay.height = Math.round(height * dpr);
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Wave dots use the theme accent (red)
+        const accent = getComputedStyle(document.documentElement)
+            .getPropertyValue("--accent");
+        context.fillStyle = (accent || "").trim() || "#ff0000";
+
+        dots = [];
+
+        for (let y = SPACING / 2; y < height + SPACING; y += SPACING) {
+            for (let x = SPACING / 2; x < width + SPACING; x += SPACING) {
+                dots.push({ x: x, y: y });
+            }
+        }
+    }
+
+    // Fully covered state in one synchronous draw (also guarantees the
+    // cover is on screen before first paint for reveal-only runs)
+    function drawCovered() {
+        context.clearRect(0, 0, width, height);
+        context.beginPath();
+
+        for (let index = 0; index < dots.length; index += 1) {
+            const dot = dots[index];
+            context.moveTo(dot.x + COVER, dot.y);
+            context.arc(dot.x, dot.y, COVER, 0, Math.PI * 2);
+        }
+
+        context.fill();
+    }
+
+    function jumpTo(targetId) {
+        const section = document.getElementById(targetId);
+
+        if (!section) {
+            return;
+        }
+
+        // Update the URL like a normal anchor click would
+        try {
+            if (window.location.hash !== "#" + targetId) {
+                window.history.pushState(null, "", "#" + targetId);
+            }
+        } catch (error) {
+            // file:// URLs can restrict the history API — the jump still works
+        }
+
+        // Instant jump — the dot cover hides it
+        const top = section.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: top, left: 0, behavior: "instant" });
+    }
+
+    // Plays the wave. onCover fires exactly when the screen is fully
+    // covered; startCovered boots already covered (reveal-only, for the
+    // fresh page behind the logo's wave-refresh).
+    function playWave(onCover, startCovered) {
+        if (waveActive) {
+            return;
+        }
+
+        buildWave();
+        waveActive = true;
+        overlay.style.display = "block";
+
+        if (startCovered) {
+            drawCovered();
+        }
+
+        let startTime = null;
+        let jumped = !onCover || !!startCovered;
+
+        function step(time) {
+            if (startTime === null) {
+                // Reveal-only runs start mid-animation (already covered)
+                startTime = time - (startCovered ? OUT_START : 0);
+            }
+
+            const elapsed = time - startTime;
+
+            // Act exactly when the last dot has finished covering
+            if (!jumped && elapsed >= COVER_DONE) {
+                jumped = true;
+                onCover();
+            }
+
+            if (elapsed >= TOTAL) {
+                context.clearRect(0, 0, width, height);
+                overlay.style.display = "none";
+                waveActive = false;
+                return;
+            }
+
+            context.clearRect(0, 0, width, height);
+            context.beginPath();
+
+            for (let index = 0; index < dots.length; index += 1) {
+                const dot = dots[index];
+                // Delay by horizontal position: the left edge (delay 0)
+                // starts first and the front sweeps across to the right
+                const delay = dot.x / width;
+                let radius;
+
+                if (elapsed < OUT_START) {
+                    const progress = clamp01((elapsed - delay * WAVE_IN) / GROW);
+                    radius = easeOutCubic(progress) * COVER;
+                } else {
+                    const progress = clamp01(
+                        (elapsed - OUT_START - delay * WAVE_OUT) / SHRINK
+                    );
+                    radius = (1 - easeOutCubic(progress)) * COVER;
+                }
+
+                if (radius > 0.3) {
+                    context.moveTo(dot.x + radius, dot.y);
+                    context.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+                }
+            }
+
+            context.fill();
+            window.requestAnimationFrame(step);
+        }
+
+        window.requestAnimationFrame(step);
+    }
+
+    navLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+            if (reducedMotion.matches) {
+                // Reduced motion: plain anchor jump, no wave
+                return;
+            }
+
+            if (waveActive) {
+                // A wave is already playing — swallow the click
+                event.preventDefault();
+                return;
+            }
+
+            const href = link.getAttribute("href");
+            const target = href && href.charAt(0) === "#" ? href.slice(1) : "";
+
+            if (!target) {
+                return;
+            }
+
+            event.preventDefault();
+            playWave(() => jumpTo(target));
+        });
+    });
+
+    // Shared with setupLogoRefresh — the logo plays this same wave
+    dotWaveTrigger = playWave;
+
+    // The logo's wave-refresh boots this page behind a cover (painted by
+    // the inline script in index.html): play the reveal half now
+    if (window.__dotWaveReveal) {
+        window.__dotWaveReveal = false;
+
+        if (window.__dotWaveRevealTimer) {
+            clearTimeout(window.__dotWaveRevealTimer);
+            window.__dotWaveRevealTimer = null;
+        }
+
+        playWave(null, true);
+    }
+}
 
 function setupMobileMenu() {
     const menuButton = document.getElementById("mobile-menu-button");
