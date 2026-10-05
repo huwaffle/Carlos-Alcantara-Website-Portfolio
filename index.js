@@ -1168,3 +1168,84 @@ function setupPictureGallery() {
     startAuto();
 }
 
+function setupThemeSlide() {
+    const panel = document.getElementById("theme-slide");
+
+    if (!panel) {
+        return;
+    }
+
+    // Slide timings: the incoming theme's background wipes across, holds
+    // at full cover (the theme swap happens here), then keeps sliding off
+    const IN = 280;                // slide in duration (ms)
+    const HOLD = 80;               // full-cover pause (ms)
+    const OUT = 280;               // slide out duration (ms)
+    const OUT_START = IN + HOLD;
+    const TOTAL = OUT_START + OUT;
+
+    let slideActive = false;
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function easeInCubic(t) {
+        return t * t * t;
+    }
+
+    themeSlideTrigger = (target, onCover) => {
+        if (slideActive) {
+            return;
+        }
+
+        slideActive = true;
+
+        // The wipe mirrors the switch: it starts on the thumb's current
+        // side and travels the way the thumb moves — light: left to
+        // right, dark: right to left — and keeps going straight through
+        const from = target ? -100 : 100;
+
+        panel.classList.remove("slide-to-light", "slide-to-dark");
+        panel.classList.add(target ? "slide-to-light" : "slide-to-dark");
+
+        let startTime = null;
+        let covered = false;
+
+        function step(time) {
+            if (startTime === null) {
+                startTime = time;
+            }
+
+            const elapsed = time - startTime;
+
+            // Swap the theme exactly when the screen is fully covered
+            if (!covered && elapsed >= IN) {
+                covered = true;
+                onCover();
+            }
+
+            if (elapsed >= TOTAL) {
+                // Park off-screen on the side it entered from
+                panel.style.transform = "translateX(" + from + "%)";
+                slideActive = false;
+                return;
+            }
+
+            let offset;
+
+            if (elapsed < IN) {
+                offset = from * (1 - easeOutCubic(elapsed / IN));
+            } else if (elapsed < OUT_START) {
+                offset = 0;
+            } else {
+                offset = -from * easeInCubic((elapsed - OUT_START) / OUT);
+            }
+
+            panel.style.transform = "translateX(" + offset + "%)";
+            window.requestAnimationFrame(step);
+        }
+
+        window.requestAnimationFrame(step);
+    };
+}
+
