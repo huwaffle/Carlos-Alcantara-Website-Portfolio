@@ -135,83 +135,8 @@ body {
 }
 
 /* =========================================================
-   PAGE BACKGROUND CIRCLES (below the hero, whole page)
+   ANIMATED DOT GRID
    ========================================================= */
-
-.page-circles {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-.page-circle {
-    position: absolute;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    opacity: 0.85;
-}
-
-/* Projects area */
-.page-circle-one {
-    width: 320px;
-    height: 320px;
-    left: -120px;
-    top: 105vh;
-}
-
-.page-circle-two {
-    width: 160px;
-    height: 160px;
-    right: 6%;
-    top: 125vh;
-}
-
-/* Skills area */
-.page-circle-three {
-    width: 420px;
-    height: 420px;
-    right: -160px;
-    top: 175vh;
-}
-
-.page-circle-four {
-    width: 110px;
-    height: 110px;
-    left: 12%;
-    top: 205vh;
-}
-
-/* Experience area */
-.page-circle-five {
-    width: 260px;
-    height: 260px;
-    left: -90px;
-    top: 245vh;
-}
-
-.page-circle-six {
-    width: 140px;
-    height: 140px;
-    right: 10%;
-    top: 270vh;
-}
-
-/* About / contact area */
-.page-circle-seven {
-    width: 380px;
-    height: 380px;
-    right: -140px;
-    bottom: 8%;
-}
-
-.page-circle-eight {
-    width: 120px;
-    height: 120px;
-    left: 8%;
-    bottom: 14%;
-}
 
 
 /* Animated interactive dot grid (dots scatter away from the cursor) */
@@ -412,65 +337,6 @@ nav a:hover::after {
     
     position: relative;
     overflow: hidden;
-}
-
-.hero-circle {
-    position: absolute;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.hero-circle-one {
-    width: 180px;
-    height: 180px;
-    left: 20px;
-    top: 120px;
-}
-
-.hero-circle-two {
-    width: 260px;
-    height: 260px;
-    right: 80px;
-    top: 50px;
-}
-
-.hero-circle-three {
-    width: 140px;
-    height: 140px;
-    right: -20px;
-    bottom: 120px;
-}
-
-.hero-circle-four {
-    width: 90px;
-    height: 90px;
-    left: 45%;
-    bottom: 50px;
-}
-
-/* Decorative Nothing-style circles */
-#hero::before,
-#hero::after {
-    content: "";
-    position: absolute;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-#hero::before {
-    width: 500px;
-    height: 500px;
-    right: -150px;
-    top: 15%;
-}
-
-#hero::after {
-    width: 350px;
-    height: 350px;
-    right: -75px;
-    top: 25%;
 }
 
 .hero-content {
@@ -1825,12 +1691,6 @@ body.menu-open .scroll-top {
     .hero-socials,
     .hero-cta {
         justify-content: center;
-    }
-
-    .hero-circle,
-    #hero::before,
-    #hero::after {
-        display: none;
     }
 
     h1 {
