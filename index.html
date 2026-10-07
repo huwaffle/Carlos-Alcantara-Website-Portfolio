@@ -14,6 +14,9 @@
     <!-- Animated dot grid background (dots scatter away from the cursor) -->
     <canvas id="dot-grid" aria-hidden="true"></canvas>
 
+    <!-- Theme slide overlay (wipes the new light/dark background across) -->
+    <div id="theme-slide" aria-hidden="true"></div>
+
     <!-- Dot-wave transition overlay (plays between nav clicks and sections) -->
     <canvas id="wave-transition" aria-hidden="true"></canvas>
 
@@ -306,6 +309,7 @@
                         <span class="skill-tag">VB.Net</span>
                         <span class="skill-tag">Assembly</span>
                         <span class="skill-tag">Dart</span>
+                        <span class="skill-tag">React</span>
                     </div>
                 </div>
                 <div class="skill-category">
@@ -322,8 +326,7 @@
                         <span class="skill-tag">Bash</span>
                         <span class="skill-tag">MySQL / SQLite</span>
                         <span class="skill-tag">Supabase</span>
-                        <span class="skill-tag">Codex</span>
-                        <span class="skill-tag">Claude Code</span>
+                        <span class="skill-tag">Flutter</span>
                     </div>
                 </div>
             </div>
@@ -422,9 +425,28 @@
 
         <!-- About Section -->
         <section id="about">
-            <h2>About Me</h2>
+            <h2>Outside of Programming</h2>
             <div class="about-content">
-                <p>A Computer Science student exploring AI and cybersecurity through real-world projects. Interested in internships where I can contribute to secure, scalable systems.</p>
+                <p>I like cycling, running, travelling, and hanging out.</p>
+                <div class="about-gallery">
+                    <button class="gallery-arrow gallery-prev" type="button" aria-label="Previous picture">
+                        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                            <path d="M20 12H4" />
+                            <path d="M10 6L4 12l6 6" />
+                        </svg>
+                    </button>
+                    <div class="gallery-frame">
+                        <img src="assets/images/me.jpg" alt="Carlos Alcantara" class="gallery-img is-active" loading="lazy">
+                        <img src="assets/diego.jpg" alt="Personal photo" class="gallery-img" loading="lazy">
+                        <canvas class="gallery-wave" aria-hidden="true"></canvas>
+                    </div>
+                    <button class="gallery-arrow gallery-next" type="button" aria-label="Next picture">
+                        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                            <path d="M4 12h16" />
+                            <path d="M14 6l6 6-6 6" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </section>
 

@@ -10,12 +10,37 @@ function applySavedTheme() {
     }
 }
 
-function updateTheme() {
-    const isLight = body.classList.toggle("light-mode");
+// Set by setupThemeSlide(); slides the incoming theme across the screen
+// and fires its callback at full cover (null when unavailable)
+let themeSlideTrigger = null;
+
+function commitTheme(isLight) {
+    if (isLight) {
+        body.classList.add("light-mode");
+    } else {
+        body.classList.remove("light-mode");
+    }
 
     themeSwitches.forEach((btn) => btn.setAttribute("aria-pressed", String(isLight)));
 
     localStorage.setItem("portfolio-theme", isLight ? "light" : "dark");
+}
+
+function updateTheme() {
+    const target = !body.classList.contains("light-mode");
+    const reduceMotion =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Wipe the incoming theme's background across the screen; the class
+    // swap happens behind the cover (falls back to a direct toggle when
+    // the slide isn't available or motion is reduced)
+    if (!reduceMotion && themeSlideTrigger) {
+        themeSlideTrigger(target, () => commitTheme(target));
+        return;
+    }
+
+    commitTheme(target);
 }
 
 async function copyEmailToClipboard(email) {
@@ -830,20 +855,156 @@ setupMobileMenu();
 setupDotGrid();
 setupLogoRefresh();
 setupNavWave();
+setupThemeSlide();
+setupPictureGallery();
 
-function setupNavWave() {
-    const overlay = document.getElementById("wave-transition");
-    const navLinks = document.querySelectorAll('nav a[href^="#"]');
+function setupPictureGallery() {
+    const gallery = document.querySelector(".about-gallery");
 
-    if (!overlay) {
+    if (!gallery) {
         return;
     }
 
-    const context = overlay.getContext("2d");
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const images = Array.from(gallery.querySelectorAll(".gallery-img"));
+    const prevButton = gallery.querySelector(".gallery-prev");
+    const nextButton = gallery.querySelector(".gallery-next");
+    const frame = gallery.querySelector(".gallery-frame");
+    const waveCanvas = gallery.querySelector(".gallery-wave");
 
-    // Dot-wave page transition: a wavefront enters from the LEFT edge and
-    // sweeps right, covering the screen in dots; the view changes behind
+    if (images.length < 2 || !prevButton || !nextButton) {
+        return;
+    }
+
+    // The dot wave runs INSIDE the picture box only — the rest of the
+    // page stays fully visible while the picture swaps behind the cover
+    const playPictureWave =
+        frame && waveCanvas
+            ? createDotWavePlayer(waveCanvas, () => ({
+                  width: frame.clientWidth,
+                  height: frame.clientHeight,
+              }))
+            : null;
+
+    let activeIndex = 0;
+
+    function showPicture(direction) {
+        const nextIndex =
+            (activeIndex + direction + images.length) % images.length;
+
+        const swap = () => {
+            images[activeIndex].classList.remove("is-active");
+            images[nextIndex].classList.add("is-active");
+            activeIndex = nextIndex;
+        };
+
+        const reduceMotion =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (reduceMotion || !playPictureWave) {
+            swap();
+            return;
+        }
+
+        // Same dot-wave look as the navbar, scoped to the picture box;
+        // direction matches the arrow (next: left→right, prev: right→left)
+        playPictureWave(swap, false, direction < 0);
+    }
+
+    prevButton.addEventListener("click", () => showPicture(-1));
+    nextButton.addEventListener("click", () => showPicture(1));
+}
+
+function setupThemeSlide() {
+    const panel = document.getElementById("theme-slide");
+
+    if (!panel) {
+        return;
+    }
+
+    // Slide timings: the incoming theme's background wipes across, holds
+    // at full cover (the theme swap happens here), then keeps sliding off
+    const IN = 240;                // slide in duration (ms)
+    const HOLD = 80;               // full-cover pause (ms)
+    const OUT = 240;               // slide out duration (ms)
+    const OUT_START = IN + HOLD;
+    const TOTAL = OUT_START + OUT;
+
+    let slideActive = false;
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function easeInCubic(t) {
+        return t * t * t;
+    }
+
+    themeSlideTrigger = (target, onCover) => {
+        if (slideActive) {
+            return;
+        }
+
+        slideActive = true;
+
+        // The wipe mirrors the switch: it starts on the thumb's current
+        // side and travels the way the thumb moves — light: left to
+        // right, dark: right to left — and keeps going straight through
+        const from = target ? -100 : 100;
+
+        panel.classList.remove("slide-to-light", "slide-to-dark");
+        panel.classList.add(target ? "slide-to-light" : "slide-to-dark");
+
+        let startTime = null;
+        let covered = false;
+
+        function step(time) {
+            if (startTime === null) {
+                startTime = time;
+            }
+
+            const elapsed = time - startTime;
+
+            // Swap the theme exactly when the screen is fully covered
+            if (!covered && elapsed >= IN) {
+                covered = true;
+                onCover();
+            }
+
+            if (elapsed >= TOTAL) {
+                // Park off-screen on the side it entered from
+                panel.style.transform = "translateX(" + from + "%)";
+                slideActive = false;
+                return;
+            }
+
+            let offset;
+
+            if (elapsed < IN) {
+                offset = from * (1 - easeOutCubic(elapsed / IN));
+            } else if (elapsed < OUT_START) {
+                offset = 0;
+            } else {
+                offset = -from * easeInCubic((elapsed - OUT_START) / OUT);
+            }
+
+            panel.style.transform = "translateX(" + offset + "%)";
+            window.requestAnimationFrame(step);
+        }
+
+        window.requestAnimationFrame(step);
+    };
+}
+
+// Shared dot-wave player: grows a lattice of accent dots to full cover on
+// the given canvas, fires onCover at full cover, then washes away.
+// getSize() supplies the area to cover — the viewport for the nav wave,
+// the picture frame for the gallery.
+function createDotWavePlayer(canvas, getSize) {
+    const context = canvas.getContext("2d");
+
+    // Dot-wave transition: a wavefront enters from the LEFT edge and
+    // sweeps right, covering the area in dots; the change happens behind
     // the cover, then the wave keeps travelling right and washes away.
     const SPACING = 22;            // wave dot lattice (px)
     const COVER = SPACING * 0.78;  // radius that guarantees full coverage
@@ -870,12 +1031,13 @@ function setupNavWave() {
     }
 
     function buildWave() {
-        width = window.innerWidth;
-        height = window.innerHeight;
+        const size = getSize();
+        width = size.width;
+        height = size.height;
 
         const dpr = window.devicePixelRatio || 1;
-        overlay.width = Math.round(width * dpr);
-        overlay.height = Math.round(height * dpr);
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         // Wave dots use the theme accent (red)
@@ -907,38 +1069,18 @@ function setupNavWave() {
         context.fill();
     }
 
-    function jumpTo(targetId) {
-        const section = document.getElementById(targetId);
-
-        if (!section) {
-            return;
-        }
-
-        // Update the URL like a normal anchor click would
-        try {
-            if (window.location.hash !== "#" + targetId) {
-                window.history.pushState(null, "", "#" + targetId);
-            }
-        } catch (error) {
-            // file:// URLs can restrict the history API — the jump still works
-        }
-
-        // Instant jump — the dot cover hides it
-        const top = section.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: top, left: 0, behavior: "instant" });
-    }
-
     // Plays the wave. onCover fires exactly when the screen is fully
     // covered; startCovered boots already covered (reveal-only, for the
-    // fresh page behind the logo's wave-refresh).
-    function playWave(onCover, startCovered) {
+    // fresh page behind the logo's wave-refresh); fromRight makes the
+    // front enter from the right edge instead of the left.
+    function playWave(onCover, startCovered, fromRight) {
         if (waveActive) {
             return;
         }
 
         buildWave();
         waveActive = true;
-        overlay.style.display = "block";
+        canvas.style.display = "block";
 
         if (startCovered) {
             drawCovered();
@@ -963,7 +1105,7 @@ function setupNavWave() {
 
             if (elapsed >= TOTAL) {
                 context.clearRect(0, 0, width, height);
-                overlay.style.display = "none";
+                canvas.style.display = "none";
                 waveActive = false;
                 return;
             }
@@ -973,9 +1115,9 @@ function setupNavWave() {
 
             for (let index = 0; index < dots.length; index += 1) {
                 const dot = dots[index];
-                // Delay by horizontal position: the left edge (delay 0)
-                // starts first and the front sweeps across to the right
-                const delay = dot.x / width;
+                // Delay by horizontal position: the front enters from the
+                // left (or the right for fromRight waves) and sweeps across
+                const delay = (fromRight ? width - dot.x : dot.x) / width;
                 let radius;
 
                 if (elapsed < OUT_START) {
@@ -1001,6 +1143,48 @@ function setupNavWave() {
         window.requestAnimationFrame(step);
     }
 
+    // Lets callers see whether a wave is mid-flight (the nav links use it
+    // to swallow clicks that would otherwise jump natively)
+    playWave.isActive = () => waveActive;
+
+    return playWave;
+}
+
+function setupNavWave() {
+    const overlay = document.getElementById("wave-transition");
+    const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+    if (!overlay) {
+        return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const playWave = createDotWavePlayer(overlay, () => ({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    }));
+
+    function jumpTo(targetId) {
+        const section = document.getElementById(targetId);
+
+        if (!section) {
+            return;
+        }
+
+        // Update the URL like a normal anchor click would
+        try {
+            if (window.location.hash !== "#" + targetId) {
+                window.history.pushState(null, "", "#" + targetId);
+            }
+        } catch (error) {
+            // file:// URLs can restrict the history API — the jump still works
+        }
+
+        // Instant jump — the dot cover hides it
+        const top = section.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: top, left: 0, behavior: "instant" });
+    }
+
     navLinks.forEach((link) => {
         link.addEventListener("click", (event) => {
             if (reducedMotion.matches) {
@@ -1008,7 +1192,7 @@ function setupNavWave() {
                 return;
             }
 
-            if (waveActive) {
+            if (playWave.isActive()) {
                 // A wave is already playing — swallow the click
                 event.preventDefault();
                 return;
