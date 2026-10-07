@@ -356,24 +356,17 @@ nav a:hover::after {
 .hero-photo-frame {
     width: clamp(220px, 22vw, 340px);
     aspect-ratio: 1 / 1;
-    border: 1px solid var(--border);
-    background: var(--card);
-    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    border-radius: 50%;
     overflow: hidden;
-    box-shadow: 0 0 0 1px var(--border);
 }
 
 .hero-photo {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
-    border: 1px solid var(--border);
     filter: grayscale(100%) contrast(1.05);
 }
 
