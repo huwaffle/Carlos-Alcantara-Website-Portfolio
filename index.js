@@ -1249,3 +1249,160 @@ function setupThemeSlide() {
     };
 }
 
+// Shared dot-wave player: grows a lattice of accent dots to full cover on
+// the given canvas, fires onCover at full cover, then washes away.
+// getSize() supplies the area to cover — the viewport for the nav wave,
+// the picture frame for the gallery.
+function createDotWavePlayer(canvas, getSize, speed) {
+    const context = canvas.getContext("2d");
+
+    // Dot-wave transition: a wavefront enters from the LEFT edge and
+    // sweeps right, covering the area in dots; the change happens behind
+    // the cover, then the wave keeps travelling right and washes away.
+    // `speed` > 1 runs the whole transition faster (the picture swaps
+    // use a quicker wave than the page-level one).
+    const rate = speed && speed > 0 ? speed : 1;
+    const SPACING = 22;            // wave dot lattice (px)
+    const COVER = SPACING * 0.78;  // radius that guarantees full coverage
+    const WAVE_IN = 280 / rate;    // left-to-right front travel while growing (ms)
+    const GROW = 130 / rate;       // per-dot grow duration (ms)
+    const HOLD = 50 / rate;        // full-cover pause — the change happens here
+    const WAVE_OUT = 240 / rate;   // left-to-right front travel while shrinking (ms)
+    const SHRINK = 110 / rate;     // per-dot shrink duration (ms)
+    const COVER_DONE = WAVE_IN + GROW;
+    const OUT_START = COVER_DONE + HOLD;
+    const TOTAL = OUT_START + WAVE_OUT + SHRINK;
+
+    let waveActive = false;
+    let dots = [];
+    let width = 0;
+    let height = 0;
+
+    function clamp01(value) {
+        return value < 0 ? 0 : value > 1 ? 1 : value;
+    }
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function buildWave() {
+        const size = getSize();
+        width = size.width;
+        height = size.height;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Wave dots use the theme accent (red)
+        const accent = getComputedStyle(document.documentElement)
+            .getPropertyValue("--accent");
+        context.fillStyle = (accent || "").trim() || "#ff0000";
+
+        dots = [];
+
+        for (let y = SPACING / 2; y < height + SPACING; y += SPACING) {
+            for (let x = SPACING / 2; x < width + SPACING; x += SPACING) {
+                dots.push({ x: x, y: y });
+            }
+        }
+    }
+
+    // Fully covered state in one synchronous draw (also guarantees the
+    // cover is on screen before first paint for reveal-only runs)
+    function drawCovered() {
+        context.clearRect(0, 0, width, height);
+        context.beginPath();
+
+        for (let index = 0; index < dots.length; index += 1) {
+            const dot = dots[index];
+            context.moveTo(dot.x + COVER, dot.y);
+            context.arc(dot.x, dot.y, COVER, 0, Math.PI * 2);
+        }
+
+        context.fill();
+    }
+
+    // Plays the wave. onCover fires exactly when the screen is fully
+    // covered; startCovered boots already covered (reveal-only, for the
+    // fresh page behind the logo's wave-refresh); fromRight makes the
+    // front enter from the right edge instead of the left.
+    function playWave(onCover, startCovered, fromRight) {
+        if (waveActive) {
+            return;
+        }
+
+        buildWave();
+        waveActive = true;
+        canvas.style.display = "block";
+
+        if (startCovered) {
+            drawCovered();
+        }
+
+        let startTime = null;
+        let jumped = !onCover || !!startCovered;
+
+        function step(time) {
+            if (startTime === null) {
+                // Reveal-only runs start mid-animation (already covered)
+                startTime = time - (startCovered ? OUT_START : 0);
+            }
+
+            const elapsed = time - startTime;
+
+            // Act exactly when the last dot has finished covering
+            if (!jumped && elapsed >= COVER_DONE) {
+                jumped = true;
+                onCover();
+            }
+
+            if (elapsed >= TOTAL) {
+                context.clearRect(0, 0, width, height);
+                canvas.style.display = "none";
+                waveActive = false;
+                return;
+            }
+
+            context.clearRect(0, 0, width, height);
+            context.beginPath();
+
+            for (let index = 0; index < dots.length; index += 1) {
+                const dot = dots[index];
+                // Delay by horizontal position: the front enters from the
+                // left (or the right for fromRight waves) and sweeps across
+                const delay = (fromRight ? width - dot.x : dot.x) / width;
+                let radius;
+
+                if (elapsed < OUT_START) {
+                    const progress = clamp01((elapsed - delay * WAVE_IN) / GROW);
+                    radius = easeOutCubic(progress) * COVER;
+                } else {
+                    const progress = clamp01(
+                        (elapsed - OUT_START - delay * WAVE_OUT) / SHRINK
+                    );
+                    radius = (1 - easeOutCubic(progress)) * COVER;
+                }
+
+                if (radius > 0.3) {
+                    context.moveTo(dot.x + radius, dot.y);
+                    context.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+                }
+            }
+
+            context.fill();
+            window.requestAnimationFrame(step);
+        }
+
+        window.requestAnimationFrame(step);
+    }
+
+    // Lets callers see whether a wave is mid-flight (the nav links use it
+    // to swallow clicks that would otherwise jump natively)
+    playWave.isActive = () => waveActive;
+
+    return playWave;
+}
+
