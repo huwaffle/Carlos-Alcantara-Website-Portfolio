@@ -1270,7 +1270,7 @@ body.light-mode .project-modal-backdrop {
    CONTACT
    ========================================================= */
 
-#contact > p {
+#contact > p:not(.contact-email-line) {
     color: var(--text-muted);
     margin-bottom: 40px;
 }
@@ -1281,8 +1281,13 @@ body.light-mode .project-modal-backdrop {
     align-items: center;
     gap: 8px;
     margin-bottom: 40px;
-    color: var(--text-muted);
+    color: #fff;
     font-size: 1.1rem;
+}
+
+/* Keep the line readable when the light theme is active */
+body.light-mode .contact-email-line {
+    color: var(--text);
 }
 
 .contact-email {
