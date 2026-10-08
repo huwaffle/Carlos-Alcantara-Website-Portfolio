@@ -1406,3 +1406,127 @@ function createDotWavePlayer(canvas, getSize, speed) {
     return playWave;
 }
 
+function setupNavWave() {
+    const overlay = document.getElementById("wave-transition");
+    const navLinks = document.querySelectorAll('nav a[href^="#"], .hero-cta a[href^="#"]');
+
+    if (!overlay) {
+        return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const playWave = createDotWavePlayer(overlay, () => ({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    }));
+
+    function jumpTo(targetId) {
+        if (!document.getElementById(targetId)) {
+            return;
+        }
+
+        // Update the URL like a normal anchor click would
+        try {
+            if (window.location.hash !== "#" + targetId) {
+                window.history.pushState(null, "", "#" + targetId);
+            }
+        } catch (error) {
+            // file:// URLs can restrict the history API — the switch still works
+        }
+
+        showSection(targetId);
+    }
+
+    navLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+            if (reducedMotion.matches) {
+                // Reduced motion: plain anchor jump, no wave
+                return;
+            }
+
+            if (playWave.isActive()) {
+                // A wave is already playing — swallow the click
+                event.preventDefault();
+                return;
+            }
+
+            const href = link.getAttribute("href");
+            const target = href && href.charAt(0) === "#" ? href.slice(1) : "";
+
+            if (!target) {
+                return;
+            }
+
+            event.preventDefault();
+            playWave(() => jumpTo(target));
+        });
+    });
+
+    // Shared with setupLogoRefresh — the logo plays this same wave
+    dotWaveTrigger = playWave;
+
+    // The logo's wave-refresh boots this page behind a cover (painted by
+    // the inline script in index.html): play the reveal half now
+    if (window.__dotWaveReveal) {
+        window.__dotWaveReveal = false;
+
+        if (window.__dotWaveRevealTimer) {
+            clearTimeout(window.__dotWaveRevealTimer);
+            window.__dotWaveRevealTimer = null;
+        }
+
+        playWave(null, true);
+    }
+}
+
+function setupMobileMenu() {
+    const menuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (!menuButton || !mobileMenu) return;
+
+    function openMenu() {
+        mobileMenu.classList.add("open");
+        document.body.classList.add("menu-open");
+        // Icon swap (☰ ↔ ✕) is handled in CSS via [aria-expanded="true"]
+        menuButton.setAttribute("aria-expanded", "true");
+        menuButton.setAttribute("aria-label", "Close menu");
+        mobileMenu.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeMenu() {
+        mobileMenu.classList.remove("open");
+        document.body.classList.remove("menu-open");
+        menuButton.setAttribute("aria-expanded", "false");
+        menuButton.setAttribute("aria-label", "Open menu");
+        mobileMenu.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+    }
+
+    menuButton.addEventListener("click", () => {
+        if (mobileMenu.classList.contains("open")) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    mobileMenu.addEventListener("click", (event) => {
+        if (event.target.tagName === "A" || event.target === mobileMenu) {
+            closeMenu();
+        }
+    });
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 1024 && mobileMenu.classList.contains("open")) {
+            closeMenu();
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && mobileMenu.classList.contains("open")) {
+            closeMenu();
+        }
+    });
+}
