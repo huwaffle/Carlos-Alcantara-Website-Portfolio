@@ -2016,3 +2016,391 @@ body.menu-open .scroll-top {
     pointer-events: none;
 }
 
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+    body > header {
+        padding: 0 20px;
+    }
+
+    body > header nav,
+    body > header > .theme-toggle {
+        display: none;
+    }
+
+    .mobile-menu-button {
+        display: inline-flex;
+    }
+}
+
+@media (max-width: 800px) {
+
+    section {
+        padding: 90px 20px;
+    }
+
+    #hero {
+        min-height: auto;
+        padding: 130px 20px 80px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .hero-image-wrap {
+        order: -1;
+        flex-basis: auto;
+        width: min(280px, 80vw);
+    }
+
+    .hero-content {
+        order: 1;
+        flex-basis: auto;
+        max-width: 100%;
+    }
+
+    .hero-description {
+        max-width: 100%;
+    }
+
+    .hero-photo-frame {
+        width: min(260px, 70vw);
+    }
+
+    .hero-socials,
+    .hero-cta {
+        justify-content: center;
+    }
+
+    h1 {
+        font-size: clamp(3.5rem, 15vw, 6rem);
+        letter-spacing: -4px;
+    }
+
+    .skills-container,
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Certifications — keep the card compact so it fits the screen with the
+       arrows still flanking it (the copy, not the frame, is what makes it
+       tall once the column gets narrow). Phones tighten it further at 500px,
+       but the arrows always stay full 44px tap targets.
+       (id on the section so it outranks `main > section:not(#hero)`, and
+       dvh so a phone's URL bar can't push the copy off screen.) */
+    main > section#certifications {
+        min-height: 100dvh;
+    }
+
+    .certifications-carousel {
+        gap: 8px;
+    }
+
+    .certification-content h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .certification-content p {
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    /* Beyond Development — the archive and its caption centre as one block.
+       (Desktop pins the portrait dead on the midline; on a phone that
+       stranded a screenful of empty space above a small frame and crammed the
+       caption underneath, so the pair centres instead.) The frame is capped
+       off the viewport height as well as the width so the whole section fits
+       one screen on every phone — and where it still can't, the auto margins
+       collapse and the page simply scrolls. */
+    main > section#about {
+        height: auto;
+        min-height: 100dvh;
+        padding: 92px 20px 40px;
+    }
+
+    /* Beyond Development on small screens: the arrows stay visible (there's
+       nothing to swipe with on mouse-driven machines and they double as a
+       clear affordance on touch), so the stage keeps a slim column gap
+       between them and the picture. Only the edge glimpses are dropped. */
+    .about-gallery {
+        margin-top: auto;
+        gap: 16px 10px;
+    }
+
+    .gallery-peek {
+        width: 40px;
+    }
+
+    .gallery-peek-prev {
+        right: calc(100% + 8px);
+    }
+
+    .gallery-peek-next {
+        left: calc(100% + 8px);
+    }
+
+    /* Portrait frame scales off the phone width *and* the phone height, so
+       the whole section still fits one screen on short phones. The vw-minus
+       cap guarantees the flanking arrows never get pinned off the edge. */
+    .gallery-frame {
+        width: min(72vw, 320px, calc(100vw - 150px));
+        width: min(72vw, 30dvh, 320px, calc(100vw - 150px));
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        aspect-ratio: 3 / 4;
+    }
+
+    .gallery-hud {
+        left: 12px;
+        bottom: 10px;
+        gap: 6px;
+    }
+
+    .gallery-index {
+        font-size: 1.5rem;
+    }
+
+    .about-content {
+        margin-top: 22px;
+        margin-bottom: auto;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+
+    .certification-card {
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    .project-card {
+        min-height: 350px;
+    }
+
+    .project-tags {
+        gap: 6px;
+        align-content: flex-start;
+    }
+
+    .project-tags li {
+        white-space: normal;
+    }
+
+    .project-links {
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .project-modal {
+        padding: 12px;
+        align-items: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    .project-modal-dialog {
+        width: 100%;
+        max-height: none;
+        margin: 16px auto;
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+
+    .project-modal-body {
+        order: 1;
+        max-height: none;
+        overflow: visible;
+        padding: 22px 18px 18px;
+    }
+
+    .project-modal-gallery {
+        order: 2;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        /* Let the whole modal scroll as one on mobile instead of a
+           scroll-within-a-scroll, so images are never clipped either way. */
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    #project-modal-description {
+        flex: 0 1 auto;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 500px) {
+
+    #hero {
+        padding-top: 150px;
+    }
+
+    .hero-cta {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .social-links {
+        flex-wrap: wrap;
+    }
+
+    .project-modal-dialog {
+        margin: 10px auto;
+    }
+
+    .project-modal-body {
+        order: 1;
+        padding: 18px 16px 20px;
+    }
+
+    .project-modal-gallery {
+        order: 2;
+        grid-template-columns: 1fr;
+        padding: 14px;
+    }
+
+    .project-modal-gallery img {
+        height: 180px;
+    }
+
+    /* Beyond Development — tighter phone layout: pull the side padding in so
+       the frame keeps as much width as it can (the 92px/40px vertical padding
+       comes from the 800px block) */
+    main > section#about {
+        padding-inline: 16px;
+    }
+
+    .gallery-peek {
+        width: 32px;
+    }
+
+    .gallery-peek-prev {
+        right: calc(100% + 6px);
+    }
+
+    .gallery-peek-next {
+        left: calc(100% + 6px);
+    }
+
+    .gallery-frame {
+        width: min(66vw, 280px, calc(100vw - 150px));
+        width: min(66vw, 30dvh, 280px, calc(100vw - 150px));
+    }
+
+    .about-content {
+        font-size: 11.5px;
+    }
+
+    /* Certifications — reclaim some side padding so the narrow card gets
+       more width (and therefore fewer wrapped lines), while the arrows
+       stay full 44px tap targets */
+    #certifications {
+        padding-inline: 14px;
+    }
+
+    .certifications-carousel {
+        gap: 6px;
+    }
+
+    .certification-card {
+        padding: 15px;
+    }
+
+    /* Phones: 18px card type re-wraps the heading onto five lines in the
+       ~180px column of a small phone, so step it down a notch instead of
+       letting the section scroll */
+    .certification-content h3 {
+        font-size: 16px;
+    }
+
+    .certification-content p {
+        font-size: 12.5px;
+        line-height: 1.65;
+    }
+
+    .certification-meta {
+        margin-top: 12px;
+        font-size: 10px;
+    }
+
+    .certification-verify {
+        gap: 6px;
+        margin-top: 10px;
+        font-size: 10px;
+    }
+}
+
+/* Beyond Development on phones and touch screens: the archive can be steered
+   by swiping the picture itself (see setupPictureGallery), but the flanking
+   arrow buttons stay on screen everywhere — they're the only obvious control
+   on a mouse-driven machine. Just the little edge glimpses are dropped where
+   they'd be clipped against the sides of a narrow stage (a short *and* narrow
+   window — a phone held sideways, wider than the 800px step but only ~390px
+   tall — drops them too, via the height rule below). */
+@media (max-width: 800px), (pointer: coarse) {
+    .about-gallery .gallery-peek {
+        display: none;
+    }
+}
+
+@media (max-height: 520px) and (max-width: 1000px) {
+    .about-gallery .gallery-peek {
+        display: none;
+    }
+}
+
+/* A short-but-wide window (a phone held sideways is 844x390 and still falls
+   into the desktop rules) has no room for the midline pin, so the picture and
+   caption centre as a block instead and the frame is capped off the height.
+   Without this the caption spills ~3px past the fold and a scrollbar blinks
+   in over an otherwise exactly-one-screen section. */
+@media (min-width: 801px) and (max-height: 520px) {
+    #about {
+        height: auto;
+        min-height: 100dvh;
+        padding: 84px 30px 24px;
+    }
+
+    #about .about-gallery {
+        margin-top: auto;
+    }
+
+    #about .about-content {
+        margin-bottom: auto;
+    }
+
+    #about .gallery-frame {
+        height: clamp(120px, 44vh, 280px);
+    }
+}
+
+/* A short *and* narrow window (a phone held sideways, 568-800px wide but only
+   ~320-420px tall) keeps the compact layout, but the section's breathing room
+   and the caption's type shrink with the height so the fold is never crossed.
+   Tall phones are untouched by this — 18dvh only dips below 92px under 511px
+   of viewport. */
+@media (max-width: 800px) and (max-height: 520px) {
+    main > section#about {
+        padding: min(92px, 18dvh) 20px min(40px, 6dvh);
+    }
+
+    .about-content {
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+}
+
