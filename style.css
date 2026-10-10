@@ -2404,3 +2404,74 @@ body.menu-open .scroll-top {
     }
 }
 
+/* Reduced motion: kept at the very end of the file on purpose. These
+   overrides have the same specificity as the animated rules earlier in the
+   file, so they only win if they come last — otherwise a later base
+   declaration quietly re-enables the transition/animation. */
+@media (prefers-reduced-motion: reduce) {
+    /* Honour the preference for programmatic scrolling too — otherwise a
+       nav switch or the scroll-to-top button still glides the page */
+    html {
+        scroll-behavior: auto;
+    }
+
+    .scroll-reveal,
+    .scroll-reveal.is-visible {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    #hero,
+    main > section.is-active {
+        animation: none;
+    }
+
+    /* Content blocks appear straight away instead of easing in one by one */
+    .content-reveal {
+        animation: none;
+    }
+
+    .certification-card,
+    .certification-card.slide-from-left.is-active,
+    .certification-card.slide-from-right.is-active {
+        animation: none;
+        transition: none;
+    }
+
+    .mobile-menu-button .menu-icon {
+        transition: none;
+    }
+
+    /* Copy confirmation and hover swap just cut over instead of sliding —
+       and stay put rather than cycling between the address and the hint */
+    .contact-email-line {
+        transition: none;
+    }
+
+    .contact-email:hover .contact-email-address,
+    .contact-email:focus-visible .contact-email-address {
+        animation: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        filter: blur(4px);
+    }
+
+    .contact-email:hover .contact-email-hint,
+    .contact-email:focus-visible .contact-email-hint {
+        animation: none;
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+
+    .gallery-viewstage .gallery-peek.is-swap img {
+        animation: none;
+    }
+
+    /* The archive doesn't auto-advance without motion, so there's no
+       countdown to show */
+    .gallery-progress {
+        display: none;
+    }
+}
