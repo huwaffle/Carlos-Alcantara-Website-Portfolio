@@ -1608,7 +1608,7 @@ body.light-mode .project-modal-backdrop {
     transform: translateY(-50%);
     max-width: 100%;
     font-family: var(--font-mono);
-    font-size: clamp(1.15rem, 4.2vw, 2rem);
+    font-size: clamp(0.8rem, 4.2vw, 2rem);
     letter-spacing: -0.5px;
     color: var(--text);
     padding-bottom: 14px;
@@ -1838,6 +1838,68 @@ button:hover {
 
     .contact-actions {
         padding-bottom: 38px;
+    }
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.site-footer {
+    width: min(var(--max-width), calc(100% - 60px));
+    margin: 0 auto;
+    padding: 28px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px 30px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.site-footer p {
+    margin: 0;
+}
+
+.site-footer ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px 26px;
+    list-style: none;
+}
+
+.site-footer a {
+    display: inline-block;
+    padding-bottom: 2px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color var(--transition), border-color var(--transition);
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+@media (max-width: 600px) {
+    .site-footer {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        padding: 24px 0 32px;
+    }
+
+    .site-footer ul {
+        justify-content: center;
+        gap: 10px 20px;
     }
 }
 
@@ -2474,4 +2536,16 @@ body.menu-open .scroll-top {
     .gallery-progress {
         display: none;
     }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
